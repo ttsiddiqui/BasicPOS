@@ -67,22 +67,26 @@
   if (tender instanceof HTMLInputElement && payTotal && changeOut) {
     const total = parseFloat(payTotal.getAttribute('data-total') || '0');
     const symbol = document.body.getAttribute('data-currency') || 'Rs';
+    const exactLabel = document.body.getAttribute('data-msg-exact') || 'Exact amount';
+    const numberLabel = document.body.getAttribute('data-msg-number') || 'Enter a number';
+    const shortLabel = document.body.getAttribute('data-msg-short') || 'Short';
+    const changeLabel = document.body.getAttribute('data-msg-change') || 'Change';
     const render = function () {
       const raw = tender.value.trim();
       if (raw === '') {
-        changeOut.textContent = 'Exact amount';
+        changeOut.textContent = exactLabel;
         return;
       }
       const value = parseFloat(raw.replace(/,/g, ''));
       if (Number.isNaN(value)) {
-        changeOut.textContent = 'Enter a number';
+        changeOut.textContent = numberLabel;
         return;
       }
       const diff = Math.round((value - total) * 100) / 100;
       if (diff < 0) {
-        changeOut.textContent = 'Short ' + symbol + ' ' + Math.abs(diff).toFixed(2);
+        changeOut.textContent = shortLabel + ' ' + symbol + ' ' + Math.abs(diff).toFixed(2);
       } else {
-        changeOut.textContent = 'Change ' + symbol + ' ' + diff.toFixed(2);
+        changeOut.textContent = changeLabel + ' ' + symbol + ' ' + diff.toFixed(2);
       }
     };
     tender.addEventListener('input', render);
@@ -166,6 +170,15 @@
   baseSalary?.addEventListener('input', updateNet);
   deduct?.addEventListener('input', updateNet);
   updateNet();
+
+  const langPick = document.getElementById('langPick');
+  if (langPick instanceof HTMLSelectElement) {
+    langPick.addEventListener('change', function () {
+      const next = new URL(window.location.href);
+      next.searchParams.set('lang', langPick.value);
+      window.location.href = next.toString();
+    });
+  }
 
   if (document.body.getAttribute('data-print') === '1') {
     window.addEventListener('load', function () {

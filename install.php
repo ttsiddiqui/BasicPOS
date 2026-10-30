@@ -18,11 +18,6 @@ function schema_statements(string $sql): array
     return $out;
 }
 
-function shop_timezones(): array
-{
-    return ['Asia/Karachi', 'Asia/Dubai', 'Asia/Riyadh', 'Asia/Kolkata', 'Asia/Dhaka', 'Asia/Singapore', 'Asia/Kuala_Lumpur', 'Europe/London', 'UTC'];
-}
-
 function split_db_host(string $host): array
 {
     $host = trim($host);
@@ -43,7 +38,8 @@ function split_db_host(string $host): array
     return [$host, $port];
 }
 
-$timezones = shop_timezones();
+$timezones = timezone_choices();
+$currencies = currency_choices();
 $installed = is_file(lock_path()) && is_file(config_path());
 $error = null;
 $done = null;
@@ -82,10 +78,10 @@ if (!$installed && $_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($business === '' || bp_strlen($business) > 120) {
             throw new RuntimeException('Enter the shop name.');
         }
-        if ($currency === '' || bp_strlen($currency) > 10) {
-            throw new RuntimeException('Enter a short currency symbol, such as Rs.');
+        if (!isset($currencies[$currency])) {
+            throw new RuntimeException('Choose a currency.');
         }
-        if (!in_array($tz, timezone_identifiers_list(), true)) {
+        if (!isset($timezones[$tz]) || !in_array($tz, timezone_identifiers_list(), true)) {
             throw new RuntimeException('Choose a timezone.');
         }
         foreach ([['Admin username', $adminUser], ['Cashier username', $cashierUser]] as $pair) {
@@ -182,8 +178,8 @@ $values = [
     'db_name' => post_str('db_name'),
     'db_user' => post_str('db_user'),
     'business_name' => post_str('business_name') !== '' ? post_str('business_name') : 'My Shop',
-    'currency_symbol' => post_str('currency_symbol') !== '' ? post_str('currency_symbol') : 'Rs',
-    'timezone' => in_array(post_str('timezone'), $timezones, true) ? post_str('timezone') : 'Asia/Karachi',
+    'currency_symbol' => isset($currencies[post_str('currency_symbol')]) ? post_str('currency_symbol') : 'Rs',
+    'timezone' => isset($timezones[post_str('timezone')]) ? post_str('timezone') : 'Asia/Karachi',
     'admin_username' => post_str('admin_username') !== '' ? post_str('admin_username') : 'admin',
     'admin_name' => post_str('admin_name') !== '' ? post_str('admin_name') : 'Admin',
     'cashier_username' => post_str('cashier_username') !== '' ? post_str('cashier_username') : 'cashier',
@@ -240,11 +236,17 @@ html_head('Install', 'page-install');
           <h2>Shop</h2>
           <div class="form-grid">
             <label class="field">Shop name<input name="business_name" value="<?= e($values['business_name']) ?>" required></label>
-            <label class="field">Currency symbol<input name="currency_symbol" value="<?= e($values['currency_symbol']) ?>" required maxlength="10"></label>
+            <label class="field">Currency
+              <select name="currency_symbol">
+                <?php foreach ($currencies as $symbol => $label): ?>
+                  <option value="<?= e($symbol) ?>"<?= $values['currency_symbol'] === $symbol ? ' selected' : '' ?>><?= e($label) ?></option>
+                <?php endforeach; ?>
+              </select>
+            </label>
             <label class="field span-2">Timezone
               <select name="timezone">
-                <?php foreach ($timezones as $zone): ?>
-                  <option value="<?= e($zone) ?>"<?= $values['timezone'] === $zone ? ' selected' : '' ?>><?= e($zone) ?></option>
+                <?php foreach ($timezones as $zone => $label): ?>
+                  <option value="<?= e($zone) ?>"<?= $values['timezone'] === $zone ? ' selected' : '' ?>><?= e($label) ?></option>
                 <?php endforeach; ?>
               </select>
             </label>

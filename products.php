@@ -63,7 +63,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             flash('success', 'Unit removed.');
             redirect('products.php?tab=units');
         } else {
-            throw new RuntimeException('That action is not available.');
+            throw new RuntimeException(t('That action is not available.'));
         }
     } catch (RuntimeException $e) {
         if (in_array($action, ['save_product', 'save_category', 'save_brand', 'save_unit'], true)) {
@@ -139,23 +139,23 @@ layout_start('Products', 'products');
 ?>
 <div class="page-head">
   <div>
-    <h1>Products</h1>
-    <p>Name, barcode, code, unit, category, brand, cost, and sale price. Categories and brands are yours to add.</p>
+    <h1><?= tx('Products') ?></h1>
+    <p><?= tx('Name, barcode, code, unit, category, brand, cost, and sale price. Categories and brands are yours to add.') ?></p>
   </div>
   <?php if ($tab === 'products' && !$showProductForm): ?>
-    <a class="btn btn-primary" href="<?= e(url('products.php?new=1')) ?>"><?= icon('plus', 22) ?> Add product</a>
+    <a class="btn btn-primary" href="<?= e(url('products.php?new=1')) ?>"><?= icon('plus', 22) ?> <?= tx('Add product') ?></a>
   <?php endif; ?>
 </div>
 
 <nav class="tabs">
-  <a class="<?= $tab === 'products' ? 'active' : '' ?>" href="<?= e(url('products.php')) ?>"><?= icon('box', 18) ?> Products</a>
-  <a class="<?= $tab === 'categories' ? 'active' : '' ?>" href="<?= e(url('products.php?tab=categories')) ?>"><?= icon('tag', 18) ?> Categories</a>
-  <a class="<?= $tab === 'brands' ? 'active' : '' ?>" href="<?= e(url('products.php?tab=brands')) ?>"><?= icon('store', 18) ?> Brands</a>
-  <a class="<?= $tab === 'units' ? 'active' : '' ?>" href="<?= e(url('products.php?tab=units')) ?>"><?= icon('grid', 18) ?> Units</a>
+  <a class="<?= $tab === 'products' ? 'active' : '' ?>" href="<?= e(url('products.php')) ?>"><?= icon('box', 18) ?> <?= tx('Products') ?></a>
+  <a class="<?= $tab === 'categories' ? 'active' : '' ?>" href="<?= e(url('products.php?tab=categories')) ?>"><?= icon('tag', 18) ?> <?= tx('Categories') ?></a>
+  <a class="<?= $tab === 'brands' ? 'active' : '' ?>" href="<?= e(url('products.php?tab=brands')) ?>"><?= icon('store', 18) ?> <?= tx('Brands') ?></a>
+  <a class="<?= $tab === 'units' ? 'active' : '' ?>" href="<?= e(url('products.php?tab=units')) ?>"><?= icon('grid', 18) ?> <?= tx('Units') ?></a>
 </nav>
 
 <?php if ($error && in_array($_POST['action'] ?? '', ['save_product', 'save_category', 'save_brand', 'save_unit'], true)): ?>
-  <div class="flash flash-error"><?= e($error) ?></div>
+  <div class="flash flash-error"><?= e(t($error)) ?></div>
 <?php endif; ?>
 
 <?php if ($tab === 'products'): ?>
@@ -167,93 +167,93 @@ layout_start('Products', 'products');
       <?= csrf_field() ?>
       <input type="hidden" name="action" value="save_product">
       <input type="hidden" name="id" value="<?= $editingProduct ? (int) $editingProduct['id'] : 0 ?>">
-      <h2><?= $editingProduct ? 'Edit product' : 'New product' ?></h2>
+      <h2><?= $editingProduct ? tx('Edit product') : tx('New product') ?></h2>
       <div class="form-grid">
-        <label class="field span-2">Name<input name="name" required maxlength="160" value="<?= e($field('name')) ?>"></label>
-        <label class="field">Barcode<input name="barcode" maxlength="64" value="<?= e($field('barcode')) ?>" inputmode="numeric"></label>
-        <label class="field">Product code<input name="product_code" maxlength="64" value="<?= e($field('product_code')) ?>"></label>
-        <label class="field">Category
+        <label class="field span-2"><?= tx('Name') ?><input name="name" required maxlength="160" value="<?= e($field('name')) ?>"></label>
+        <label class="field"><?= tx('Barcode') ?><input name="barcode" maxlength="64" value="<?= e($field('barcode')) ?>" inputmode="numeric"></label>
+        <label class="field"><?= tx('Product code') ?><input name="product_code" maxlength="64" value="<?= e($field('product_code')) ?>"></label>
+        <label class="field"><?= tx('Category') ?>
           <select name="category_id">
-            <option value="0">None</option>
+            <option value="0"><?= tx('None') ?></option>
             <?php foreach ($categories as $row): ?>
               <option value="<?= (int) $row['id'] ?>"<?= (string) $row['id'] === $field('category_id') ? ' selected' : '' ?>><?= e((string) $row['name']) ?></option>
             <?php endforeach; ?>
           </select>
         </label>
-        <label class="field">Brand
+        <label class="field"><?= tx('Brand') ?>
           <select name="brand_id">
-            <option value="0">None</option>
+            <option value="0"><?= tx('None') ?></option>
             <?php foreach ($brands as $row): ?>
               <option value="<?= (int) $row['id'] ?>"<?= (string) $row['id'] === $field('brand_id') ? ' selected' : '' ?>><?= e((string) $row['name']) ?></option>
             <?php endforeach; ?>
           </select>
         </label>
-        <label class="field">Unit
+        <label class="field"><?= tx('Unit') ?>
           <select name="unit_id">
-            <option value="0">None</option>
+            <option value="0"><?= tx('None') ?></option>
             <?php foreach ($units as $row): ?>
               <option value="<?= (int) $row['id'] ?>"<?= (string) $row['id'] === $field('unit_id') ? ' selected' : '' ?>><?= e((string) $row['name']) ?></option>
             <?php endforeach; ?>
           </select>
         </label>
-        <label class="field">Reorder level<input name="reorder_level" type="number" min="0" step="0.001" value="<?= e($field('reorder_level', $editingProduct ? '' : '5')) ?>"></label>
-        <label class="field">Cost price<input name="cost_price" type="number" min="0" step="0.01" required value="<?= e($field('cost_price', '0')) ?>"></label>
-        <label class="field">Sale price<input name="sale_price" type="number" min="0" step="0.01" required value="<?= e($field('sale_price', '0')) ?>"></label>
+        <label class="field"><?= tx('Reorder level') ?><input name="reorder_level" type="number" min="0" step="0.001" value="<?= e($field('reorder_level', $editingProduct ? '' : '5')) ?>"></label>
+        <label class="field"><?= tx('Cost price') ?><input name="cost_price" type="number" min="0" step="0.01" required value="<?= e($field('cost_price', '0')) ?>"></label>
+        <label class="field"><?= tx('Sale price') ?><input name="sale_price" type="number" min="0" step="0.01" required value="<?= e($field('sale_price', '0')) ?>"></label>
         <?php if (!$editingProduct): ?>
-          <label class="field span-2">Opening stock<input name="opening_stock" type="number" min="0" step="0.001" value="<?= e($field('opening_stock', '0')) ?>"><span class="hint">This adds quantity only. It is not counted as a purchase. Use Stock in for deliveries.</span></label>
+          <label class="field span-2"><?= tx('Opening stock') ?><input name="opening_stock" type="number" min="0" step="0.001" value="<?= e($field('opening_stock', '0')) ?>"><span class="hint"><?= tx('This adds quantity only. It is not counted as a purchase. Use Stock in for deliveries.') ?></span></label>
         <?php else: ?>
-          <p class="span-2 hint">Current stock is <?= e(qty_fmt($editingProduct['stock_qty'])) ?>. Change it from Stock in.</p>
+          <p class="span-2 hint"><?= tx('Current stock is {qty}. Change it from Stock in.', ['qty' => qty_fmt($editingProduct['stock_qty'])]) ?></p>
         <?php endif; ?>
-        <label class="check span-2"><input type="checkbox" name="active" value="1"<?= $activeChecked ? ' checked' : '' ?>> Show this product on the sale screen</label>
+        <label class="check span-2"><input type="checkbox" name="active" value="1"<?= $activeChecked ? ' checked' : '' ?>> <?= tx('Show this product on the sale screen') ?></label>
       </div>
       <div class="form-actions">
-        <button class="btn btn-primary" type="submit"><?= icon('check', 20) ?> Save product</button>
-        <a class="btn btn-ghost" href="<?= e(url('products.php')) ?>">Close</a>
+        <button class="btn btn-primary" type="submit"><?= icon('check', 20) ?> <?= tx('Save product') ?></button>
+        <a class="btn btn-ghost" href="<?= e(url('products.php')) ?>"><?= tx('Close') ?></a>
       </div>
     </form>
   <?php endif; ?>
 
   <form class="card" method="get" action="<?= e(url('products.php')) ?>">
     <div class="search-form">
-      <input name="q" value="<?= e($q) ?>" placeholder="Search name, barcode, or code">
+      <input name="q" value="<?= e($q) ?>" placeholder="<?= tx('Search name, barcode, or code') ?>">
       <?php if ($lowOnly): ?><input type="hidden" name="stock" value="low"><?php endif; ?>
       <?php if ($status !== 'active'): ?><input type="hidden" name="status" value="<?= e($status) ?>"><?php endif; ?>
-      <button class="btn btn-dark" type="submit"><?= icon('search', 20) ?> Search</button>
+      <button class="btn btn-dark" type="submit"><?= icon('search', 20) ?> <?= tx('Search') ?></button>
     </div>
   </form>
   <nav class="chips">
-    <a class="chip<?= $status === 'active' && !$lowOnly ? ' active' : '' ?>" href="<?= e(url('products.php')) ?>">Active</a>
-    <a class="chip<?= $lowOnly ? ' active' : '' ?>" href="<?= e(url('products.php?stock=low')) ?>">Low stock</a>
-    <a class="chip<?= $status === 'hidden' ? ' active' : '' ?>" href="<?= e(url('products.php?status=hidden')) ?>">Hidden</a>
-    <a class="chip<?= $status === 'all' && !$lowOnly ? ' active' : '' ?>" href="<?= e(url('products.php?status=all')) ?>">All</a>
+    <a class="chip<?= $status === 'active' && !$lowOnly ? ' active' : '' ?>" href="<?= e(url('products.php')) ?>"><?= tx('Active') ?></a>
+    <a class="chip<?= $lowOnly ? ' active' : '' ?>" href="<?= e(url('products.php?stock=low')) ?>"><?= tx('Low stock') ?></a>
+    <a class="chip<?= $status === 'hidden' ? ' active' : '' ?>" href="<?= e(url('products.php?status=hidden')) ?>"><?= tx('Hidden') ?></a>
+    <a class="chip<?= $status === 'all' && !$lowOnly ? ' active' : '' ?>" href="<?= e(url('products.php?status=all')) ?>"><?= tx('All') ?></a>
   </nav>
   <div class="card">
     <?php if (!$products): ?>
-      <?= empty_state('box', 'No products yet', 'Add a product, or add a category and brand first.') ?>
+      <?= empty_state('box', t('No products yet'), t('Add a product, or add a category and brand first.')) ?>
     <?php else: ?>
-      <?php if ($truncated): ?><p class="hint">Showing the first 300 matches. Search to narrow the list.</p><?php endif; ?>
+      <?php if ($truncated): ?><p class="hint"><?= tx('Showing the first 300 matches. Search to narrow the list.') ?></p><?php endif; ?>
       <div class="table-wrap">
         <table class="data stack">
           <thead>
-            <tr><th>Product</th><th>Code</th><th>Category</th><th class="num">Cost</th><th class="num">Sale</th><th class="num">Stock</th><th></th></tr>
+            <tr><th><?= tx('Product') ?></th><th><?= tx('Code') ?></th><th><?= tx('Category') ?></th><th class="num"><?= tx('Cost') ?></th><th class="num"><?= tx('Sale') ?></th><th class="num"><?= tx('Stock') ?></th><th></th></tr>
           </thead>
           <tbody>
             <?php foreach ($products as $product): ?>
               <?php $low = (float) $product['stock_qty'] <= (float) $product['reorder_level']; ?>
               <tr>
-                <td data-label="Product"><strong><?= e((string) $product['name']) ?></strong><?php if (!(int) $product['active']): ?> <span class="badge badge-off">Hidden</span><?php endif; ?><?php if ($low): ?> <span class="badge badge-warn">Low</span><?php endif; ?></td>
-                <td data-label="Code"><?= e((string) ($product['product_code'] ?: $product['barcode'] ?: '—')) ?></td>
-                <td data-label="Category"><?= e((string) ($product['category_name'] ?: '—')) ?><?= $product['brand_name'] ? ' · ' . e((string) $product['brand_name']) : '' ?></td>
-                <td class="num" data-label="Cost"><?= e(money($product['cost_price'])) ?></td>
-                <td class="num" data-label="Sale"><?= e(money($product['sale_price'])) ?></td>
-                <td class="num" data-label="Stock"><?= e(qty_fmt($product['stock_qty'])) ?> <?= e((string) ($product['unit_name'] ?? '')) ?></td>
+                <td data-label="<?= tx('Product') ?>"><strong><?= e((string) $product['name']) ?></strong><?php if (!(int) $product['active']): ?> <span class="badge badge-off"><?= tx('Hidden') ?></span><?php endif; ?><?php if ($low): ?> <span class="badge badge-warn"><?= tx('Low') ?></span><?php endif; ?></td>
+                <td data-label="<?= tx('Code') ?>"><?= e((string) ($product['product_code'] ?: $product['barcode'] ?: '—')) ?></td>
+                <td data-label="<?= tx('Category') ?>"><?= e((string) ($product['category_name'] ?: '—')) ?><?= $product['brand_name'] ? ' · ' . e((string) $product['brand_name']) : '' ?></td>
+                <td class="num" data-label="<?= tx('Cost') ?>"><?= e(money($product['cost_price'])) ?></td>
+                <td class="num" data-label="<?= tx('Sale') ?>"><?= e(money($product['sale_price'])) ?></td>
+                <td class="num" data-label="<?= tx('Stock') ?>"><?= e(qty_fmt($product['stock_qty'])) ?> <?= e((string) ($product['unit_name'] ?? '')) ?></td>
                 <td class="actions" data-label="">
-                  <a class="btn btn-ghost btn-sm" href="<?= e(url('products.php?id=' . (int) $product['id'])) ?>"><?= icon('edit', 18) ?> Edit</a>
-                  <form method="post" data-confirm="Remove this product?">
+                  <a class="btn btn-ghost btn-sm" href="<?= e(url('products.php?id=' . (int) $product['id'])) ?>"><?= icon('edit', 18) ?> <?= tx('Edit') ?></a>
+                  <form method="post" data-confirm="<?= tx('Remove this product?') ?>">
                     <?= csrf_field() ?>
                     <input type="hidden" name="action" value="delete_product">
                     <input type="hidden" name="id" value="<?= (int) $product['id'] ?>">
-                    <button class="btn btn-danger btn-sm" type="submit"><?= icon('trash', 18) ?> Remove</button>
+                    <button class="btn btn-danger btn-sm" type="submit"><?= icon('trash', 18) ?> <?= tx('Remove') ?></button>
                   </form>
                 </td>
               </tr>
@@ -267,11 +267,11 @@ layout_start('Products', 'products');
 <?php else: ?>
   <?php
     $map = [
-        'categories' => ['bp_categories', 'Category', 'save_category', 'delete_category', $categories],
-        'brands' => ['bp_brands', 'Brand', 'save_brand', 'delete_brand', $brands],
-        'units' => ['bp_units', 'Unit', 'save_unit', 'delete_unit', $units],
+        'categories' => ['bp_categories', 'Category', 'save_category', 'delete_category', $categories, 'Edit category', 'Add category', 'Remove this category?'],
+        'brands' => ['bp_brands', 'Brand', 'save_brand', 'delete_brand', $brands, 'Edit brand', 'Add brand', 'Remove this brand?'],
+        'units' => ['bp_units', 'Unit', 'save_unit', 'delete_unit', $units, 'Edit unit', 'Add unit', 'Remove this unit?'],
     ];
-    [$table, $label, $saveAction, $deleteAction, $rows] = $map[$tab];
+    [$table, $label, $saveAction, $deleteAction, $rows, $editLabel, $addLabel, $removeConfirm] = $map[$tab];
     $current = null;
     foreach ($rows as $row) {
         if ((int) $row['id'] === $namedEdit) {
@@ -287,33 +287,33 @@ layout_start('Products', 'products');
     <?= csrf_field() ?>
     <input type="hidden" name="action" value="<?= e($saveAction) ?>">
     <input type="hidden" name="id" value="<?= $current ? (int) $current['id'] : 0 ?>">
-    <h2><?= $current ? 'Edit ' . e(strtolower($label)) : 'Add ' . e(strtolower($label)) ?></h2>
+    <h2><?= $current ? tx($editLabel) : tx($addLabel) ?></h2>
     <div class="form-grid">
-      <label class="field">Name<input name="name" required maxlength="<?= $tab === 'units' ? '40' : '80' ?>" value="<?= e((string) $namedValue) ?>"></label>
+      <label class="field"><?= tx('Name') ?><input name="name" required maxlength="<?= $tab === 'units' ? '40' : '80' ?>" value="<?= e((string) $namedValue) ?>"></label>
     </div>
     <div class="form-actions">
-      <button class="btn btn-primary" type="submit"><?= icon('check', 20) ?> Save</button>
-      <?php if ($current): ?><a class="btn btn-ghost" href="<?= e(url('products.php?tab=' . $tab)) ?>">Cancel</a><?php endif; ?>
+      <button class="btn btn-primary" type="submit"><?= icon('check', 20) ?> <?= tx('Save') ?></button>
+      <?php if ($current): ?><a class="btn btn-ghost" href="<?= e(url('products.php?tab=' . $tab)) ?>"><?= tx('Cancel') ?></a><?php endif; ?>
     </div>
   </form>
   <div class="card">
     <?php if (!$rows): ?>
-      <?= empty_state('tag', 'Nothing here yet', 'Add one with the form above.') ?>
+      <?= empty_state('tag', t('Nothing here yet'), t('Add one with the form above.')) ?>
     <?php else: ?>
       <div class="table-wrap">
         <table class="data stack">
-          <thead><tr><th><?= e($label) ?></th><th></th></tr></thead>
+          <thead><tr><th><?= tx($label) ?></th><th></th></tr></thead>
           <tbody>
             <?php foreach ($rows as $row): ?>
               <tr>
-                <td data-label="<?= e($label) ?>"><?= e((string) $row['name']) ?></td>
+                <td data-label="<?= tx($label) ?>"><?= e((string) $row['name']) ?></td>
                 <td class="actions" data-label="">
-                  <a class="btn btn-ghost btn-sm" href="<?= e(url('products.php?tab=' . $tab . '&edit=' . (int) $row['id'])) ?>"><?= icon('edit', 18) ?> Edit</a>
-                  <form method="post" action="<?= e(url('products.php?tab=' . $tab)) ?>" data-confirm="Remove this <?= e(strtolower($label)) ?>?">
+                  <a class="btn btn-ghost btn-sm" href="<?= e(url('products.php?tab=' . $tab . '&edit=' . (int) $row['id'])) ?>"><?= icon('edit', 18) ?> <?= tx('Edit') ?></a>
+                  <form method="post" action="<?= e(url('products.php?tab=' . $tab)) ?>" data-confirm="<?= tx($removeConfirm) ?>">
                     <?= csrf_field() ?>
                     <input type="hidden" name="action" value="<?= e($deleteAction) ?>">
                     <input type="hidden" name="id" value="<?= (int) $row['id'] ?>">
-                    <button class="btn btn-danger btn-sm" type="submit"><?= icon('trash', 18) ?> Remove</button>
+                    <button class="btn btn-danger btn-sm" type="submit"><?= icon('trash', 18) ?> <?= tx('Remove') ?></button>
                   </form>
                 </td>
               </tr>

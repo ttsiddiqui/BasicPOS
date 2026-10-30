@@ -6,7 +6,7 @@ require __DIR__ . '/includes/bootstrap.php';
 $user = require_admin();
 $stats = dashboard_stats();
 $hour = (int) date('G');
-$hello = $hour < 12 ? 'Good morning' : ($hour < 17 ? 'Good afternoon' : 'Good evening');
+$hello = $hour < 12 ? t('Good morning') : ($hour < 17 ? t('Good afternoon') : t('Good evening'));
 $maxBar = 1.0;
 foreach ($stats['series'] as $point) {
     if ($point['total'] > $maxBar) {
@@ -20,35 +20,35 @@ layout_start('Dashboard', 'dashboard');
 <div class="page-head">
   <div>
     <h1><?= e($hello) ?>, <?= e((string) $user['full_name']) ?></h1>
-    <p><?= e(date('l, d M Y')) ?> · <?= e(setting('business_name')) ?></p>
+    <p><?= e(long_date()) ?> · <?= e(setting('business_name')) ?></p>
   </div>
   <div class="page-actions">
-    <a class="btn btn-primary" href="<?= e(url('pos.php')) ?>"><?= icon('cart', 22) ?> New sale</a>
+    <a class="btn btn-primary" href="<?= e(url('pos.php')) ?>"><?= icon('cart', 22) ?> <?= tx('New sale') ?></a>
   </div>
 </div>
 
 <section class="stats">
   <article class="stat">
     <span class="ico-wrap"><?= icon('cash', 28) ?></span>
-    <div><span>Today's sales</span><b><?= e(money($stats['today']['total'])) ?></b></div>
+    <div><span><?= tx("Today's sales") ?></span><b><?= e(money($stats['today']['total'])) ?></b></div>
   </article>
   <article class="stat">
     <span class="ico-wrap ico-ink"><?= icon('chart', 28) ?></span>
-    <div><span>This month's sales</span><b><?= e(money($stats['month']['total'])) ?></b></div>
+    <div><span><?= tx("This month's sales") ?></span><b><?= e(money($stats['month']['total'])) ?></b></div>
   </article>
   <article class="stat">
     <span class="ico-wrap <?= $profit < 0 ? 'ico-hot' : '' ?>"><?= icon('trend', 28) ?></span>
-    <div><span>This month's profit</span><b class="<?= $profit < 0 ? 'money-bad' : 'money-good' ?>"><?= e(money($profit)) ?></b></div>
+    <div><span><?= tx("This month's profit") ?></span><b class="<?= $profit < 0 ? 'money-bad' : 'money-good' ?>"><?= e(money($profit)) ?></b></div>
   </article>
   <article class="stat">
     <span class="ico-wrap ico-amber"><?= icon('alert', 28) ?></span>
-    <div><span>Low stock</span><b><?= (int) $stats['low_count'] ?></b></div>
+    <div><span><?= tx('Low stock') ?></span><b><?= (int) $stats['low_count'] ?></b></div>
   </article>
 </section>
 
 <div class="two-col">
   <section class="card">
-    <h2>Last 7 days</h2>
+    <h2><?= tx('Last 7 days') ?></h2>
     <div class="week" aria-hidden="true">
       <?php foreach ($stats['series'] as $point): ?>
         <?php $height = max(4, (int) round(($point['total'] / $maxBar) * 100)); ?>
@@ -58,26 +58,26 @@ layout_start('Dashboard', 'dashboard');
         </div>
       <?php endforeach; ?>
     </div>
-    <p class="hint"><?= (int) $stats['product_count'] ?> products in the catalog.</p>
+    <p class="hint"><?= tx('{n} products in the catalog.', ['n' => (string) (int) $stats['product_count']]) ?></p>
   </section>
   <section class="card">
-    <h2>Jump in</h2>
+    <h2><?= tx('Jump in') ?></h2>
     <div class="tiles">
-      <a class="tile" href="<?= e(url('products.php?new=1')) ?>"><span class="ico-wrap"><?= icon('plus', 26) ?></span><span>Add product</span></a>
-      <a class="tile" href="<?= e(url('inventory.php')) ?>"><span class="ico-wrap"><?= icon('inbox', 26) ?></span><span>Stock in</span></a>
-      <a class="tile" href="<?= e(url('expenses.php')) ?>"><span class="ico-wrap"><?= icon('wallet', 26) ?></span><span>Expense</span></a>
-      <a class="tile" href="<?= e(url('hr.php?tab=payroll')) ?>"><span class="ico-wrap"><?= icon('users', 26) ?></span><span>Payroll</span></a>
-      <a class="tile" href="<?= e(url('discounts.php')) ?>"><span class="ico-wrap"><?= icon('percent', 26) ?></span><span>Discount</span></a>
-      <a class="tile" href="<?= e(url('reports.php?type=pnl')) ?>"><span class="ico-wrap"><?= icon('chart', 26) ?></span><span>Profit report</span></a>
+      <a class="tile" href="<?= e(url('products.php?new=1')) ?>"><span class="ico-wrap"><?= icon('plus', 26) ?></span><span><?= tx('Add product') ?></span></a>
+      <a class="tile" href="<?= e(url('inventory.php')) ?>"><span class="ico-wrap"><?= icon('inbox', 26) ?></span><span><?= tx('Stock in') ?></span></a>
+      <a class="tile" href="<?= e(url('expenses.php')) ?>"><span class="ico-wrap"><?= icon('wallet', 26) ?></span><span><?= tx('Expense') ?></span></a>
+      <a class="tile" href="<?= e(url('hr.php?tab=payroll')) ?>"><span class="ico-wrap"><?= icon('users', 26) ?></span><span><?= tx('Payroll') ?></span></a>
+      <a class="tile" href="<?= e(url('discounts.php')) ?>"><span class="ico-wrap"><?= icon('percent', 26) ?></span><span><?= tx('Discount') ?></span></a>
+      <a class="tile" href="<?= e(url('reports.php?type=pnl')) ?>"><span class="ico-wrap"><?= icon('chart', 26) ?></span><span><?= tx('Profit report') ?></span></a>
     </div>
   </section>
 </div>
 
 <div class="two-col">
   <section class="card">
-    <h2>Recent sales</h2>
+    <h2><?= tx('Recent sales') ?></h2>
     <?php if (!$stats['recent']): ?>
-      <?= empty_state('receipt', 'No sales yet', 'A completed sale will show up here.') ?>
+      <?= empty_state('receipt', t('No sales yet'), t('A completed sale will show up here.')) ?>
     <?php else: ?>
       <div class="list-compact">
         <?php foreach ($stats['recent'] as $sale): ?>
@@ -90,9 +90,9 @@ layout_start('Dashboard', 'dashboard');
     <?php endif; ?>
   </section>
   <section class="card">
-    <h2>Low stock</h2>
+    <h2><?= tx('Low stock') ?></h2>
     <?php if (!$stats['low_stock']): ?>
-      <?= empty_state('check', 'Stock looks fine', 'Products at or below their reorder level show here.') ?>
+      <?= empty_state('check', t('Stock looks fine'), t('Products at or below their reorder level show here.')) ?>
     <?php else: ?>
       <div class="list-compact">
         <?php foreach ($stats['low_stock'] as $product): ?>
@@ -102,7 +102,7 @@ layout_start('Dashboard', 'dashboard');
           </a>
         <?php endforeach; ?>
       </div>
-      <p><a href="<?= e(url('products.php?stock=low')) ?>">View all low stock</a></p>
+      <p><a href="<?= e(url('products.php?stock=low')) ?>"><?= tx('View all low stock') ?></a></p>
     <?php endif; ?>
   </section>
 </div>

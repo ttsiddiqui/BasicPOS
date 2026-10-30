@@ -61,7 +61,7 @@ function when_fmt(?string $dt): string
         return '';
     }
     $t = strtotime($dt);
-    return $t ? date('d M Y, g:i A', $t) : $dt;
+    return $t ? date('d', $t) . ' ' . t(date('M', $t)) . ' ' . date('Y', $t) . ', ' . date('g:i A', $t) : $dt;
 }
 
 function day_fmt(?string $d): string
@@ -70,12 +70,13 @@ function day_fmt(?string $d): string
         return '';
     }
     $t = strtotime($d);
-    return $t ? date('d M Y', $t) : $d;
+    return $t ? date('d', $t) . ' ' . t(date('M', $t)) . ' ' . date('Y', $t) : $d;
 }
 
 function month_label(int $year, int $month): string
 {
-    return date('F Y', mktime(0, 0, 0, $month, 1, $year));
+    $name = date('F', mktime(0, 0, 0, $month, 1, $year));
+    return t($name) . ' ' . $year;
 }
 
 function is_duplicate_key(Throwable $e): bool
@@ -96,12 +97,12 @@ function existing_id(string $table, int $id): ?int
         return null;
     }
     if (!isset($allowed[$table])) {
-        throw new RuntimeException('That choice is not valid.');
+        throw new RuntimeException(t('That choice is not valid.'));
     }
     $st = db()->prepare('SELECT id FROM ' . $table . ' WHERE id = ?');
     $st->execute([$id]);
     if (!$st->fetch()) {
-        throw new RuntimeException('Please choose a valid option from the list.');
+        throw new RuntimeException(t('Please choose a valid option from the list.'));
     }
     return $id;
 }
@@ -114,15 +115,15 @@ function save_named(string $table, string $name, ?int $id = null): void
         'bp_units' => ['Unit', 40],
     ];
     if (!isset($allowed[$table])) {
-        throw new RuntimeException('That list is not valid.');
+        throw new RuntimeException(t('That list is not valid.'));
     }
     [$label, $max] = $allowed[$table];
     $name = trim($name);
     if ($name === '') {
-        throw new RuntimeException($label . ' name is required.');
+        throw new RuntimeException(t('{label} name is required.', ['label' => t($label)]));
     }
     if (bp_strlen($name) > $max) {
-        throw new RuntimeException('That name is too long.');
+        throw new RuntimeException(t('That name is too long.'));
     }
     try {
         if ($id) {
@@ -147,7 +148,7 @@ function save_named(string $table, string $name, ?int $id = null): void
         }
     } catch (PDOException $e) {
         if (is_duplicate_key($e)) {
-            throw new RuntimeException('That name already exists.');
+            throw new RuntimeException(t('That name already exists.'));
         }
         throw $e;
     }
@@ -157,17 +158,17 @@ function delete_named(string $table, int $id): void
 {
     $allowed = ['bp_categories' => true, 'bp_brands' => true, 'bp_units' => true];
     if (!isset($allowed[$table]) || $id <= 0) {
-        throw new RuntimeException('That item was not found.');
+        throw new RuntimeException(t('That item was not found.'));
     }
     try {
         $st = db()->prepare('DELETE FROM ' . $table . ' WHERE id = ?');
         $st->execute([$id]);
         if ($st->rowCount() < 1) {
-            throw new RuntimeException('That item was not found.');
+            throw new RuntimeException(t('That item was not found.'));
         }
     } catch (PDOException $e) {
         if (is_duplicate_key($e)) {
-            throw new RuntimeException('This is used by a product, so it cannot be removed.');
+            throw new RuntimeException(t('This is used by a product, so it cannot be removed.'));
         }
         throw $e;
     }
@@ -193,28 +194,28 @@ function save_product(array $in, ?int $id = null): int
 {
     $name = trim((string) ($in['name'] ?? ''));
     if ($name === '') {
-        throw new RuntimeException('Product name is required.');
+        throw new RuntimeException(t('Product name is required.'));
     }
     if (bp_strlen($name) > 160) {
-        throw new RuntimeException('Product name is too long.');
+        throw new RuntimeException(t('Product name is too long.'));
     }
     $barcode = trim((string) ($in['barcode'] ?? ''));
     $code = trim((string) ($in['product_code'] ?? ''));
     if (bp_strlen($barcode) > 64 || bp_strlen($code) > 64) {
-        throw new RuntimeException('Barcode or product code is too long.');
+        throw new RuntimeException(t('Barcode or product code is too long.'));
     }
     if (product_code_taken('barcode', $barcode, $id)) {
-        throw new RuntimeException('That barcode is already used.');
+        throw new RuntimeException(t('That barcode is already used.'));
     }
     if (product_code_taken('product_code', $code, $id)) {
-        throw new RuntimeException('That product code is already used.');
+        throw new RuntimeException(t('That product code is already used.'));
     }
     $cost = round((float) ($in['cost_price'] ?? 0), 2);
     $sale = round((float) ($in['sale_price'] ?? 0), 2);
     $reorder = round((float) ($in['reorder_level'] ?? 0), 3);
     $opening = round((float) ($in['opening_stock'] ?? 0), 3);
     if ($cost < 0 || $sale < 0 || $reorder < 0 || $opening < 0) {
-        throw new RuntimeException('Prices and quantities cannot be negative.');
+        throw new RuntimeException(t('Prices and quantities cannot be negative.'));
     }
     $unitId = existing_id('bp_units', (int) ($in['unit_id'] ?? 0));
     $categoryId = existing_id('bp_categories', (int) ($in['category_id'] ?? 0));
@@ -323,35 +324,35 @@ function save_discount(array $in, ?int $id = null): void
 {
     $name = trim((string) ($in['name'] ?? ''));
     if ($name === '' || bp_strlen($name) > 120) {
-        throw new RuntimeException('Enter a discount name (up to 120 characters).');
+        throw new RuntimeException(t('Enter a discount name (up to 120 characters).'));
     }
     $type = (string) ($in['type'] ?? '');
     if (!in_array($type, ['fixed', 'percent'], true)) {
-        throw new RuntimeException('Choose a fixed amount or a percentage.');
+        throw new RuntimeException(t('Choose a fixed amount or a percentage.'));
     }
     $value = round((float) ($in['value'] ?? 0), 2);
     if ($type === 'percent' && ($value <= 0 || $value > 100)) {
-        throw new RuntimeException('Percentage must be more than 0 and at most 100.');
+        throw new RuntimeException(t('Percentage must be more than 0 and at most 100.'));
     }
     if ($type === 'fixed' && $value <= 0) {
-        throw new RuntimeException('Fixed discount must be more than 0.');
+        throw new RuntimeException(t('Fixed discount must be more than 0.'));
     }
     $apply = (string) ($in['apply_to'] ?? '');
     if (!in_array($apply, ['all', 'selected'], true)) {
-        throw new RuntimeException('Choose all products or selected products.');
+        throw new RuntimeException(t('Choose all products or selected products.'));
     }
     $startRaw = trim((string) ($in['starts_on'] ?? ''));
     $endRaw = trim((string) ($in['ends_on'] ?? ''));
     $start = $startRaw === '' ? null : valid_date($startRaw);
     $end = $endRaw === '' ? null : valid_date($endRaw);
     if ($startRaw !== '' && !$start) {
-        throw new RuntimeException('Start date is not valid.');
+        throw new RuntimeException(t('Start date is not valid.'));
     }
     if ($endRaw !== '' && !$end) {
-        throw new RuntimeException('End date is not valid.');
+        throw new RuntimeException(t('End date is not valid.'));
     }
     if ($start && $end && $start > $end) {
-        throw new RuntimeException('The start date must be on or before the end date.');
+        throw new RuntimeException(t('The start date must be on or before the end date.'));
     }
     $ids = [];
     foreach ((array) ($in['product_ids'] ?? []) as $pid) {
@@ -374,7 +375,7 @@ function save_discount(array $in, ?int $id = null): void
                 $check = $pdo->prepare('SELECT id FROM bp_discounts WHERE id = ?');
                 $check->execute([$id]);
                 if (!$check->fetch()) {
-                    throw new RuntimeException('That discount was not found.');
+                    throw new RuntimeException(t('That discount was not found.'));
                 }
             }
             $pdo->prepare('DELETE FROM bp_discount_products WHERE discount_id = ?')->execute([$id]);
@@ -396,10 +397,10 @@ function save_discount(array $in, ?int $id = null): void
                 }
             }
             if ($linked === 0) {
-                throw new RuntimeException('Pick at least one product.');
+                throw new RuntimeException(t('Pick at least one product.'));
             }
         } elseif ($apply === 'selected') {
-            throw new RuntimeException('Pick at least one product.');
+            throw new RuntimeException(t('Pick at least one product.'));
         }
         $pdo->commit();
     } catch (Throwable $e) {
@@ -415,7 +416,7 @@ function delete_discount(int $id): void
     $st = db()->prepare('DELETE FROM bp_discounts WHERE id = ?');
     $st->execute([$id]);
     if ($st->rowCount() < 1) {
-        throw new RuntimeException('That discount was not found.');
+        throw new RuntimeException(t('That discount was not found.'));
     }
 }
 
@@ -426,7 +427,7 @@ function next_doc_no(PDO $pdo, string $table, string $column, string $prefix): s
         'bp_purchases' => 'reference_no',
     ];
     if (!isset($allowed[$table]) || $allowed[$table] !== $column) {
-        throw new RuntimeException('Could not make a reference number.');
+        throw new RuntimeException(t('Could not make a reference number.'));
     }
     $like = $prefix . '%';
     $st = $pdo->prepare('SELECT ' . $column . ' FROM ' . $table . ' WHERE ' . $column . ' LIKE ? ORDER BY ' . $column . ' DESC LIMIT 1 FOR UPDATE');
@@ -489,18 +490,18 @@ function cart_set(int $productId, float $qty): void
     if (!$p || !(int) $p['active']) {
         unset($cart[$productId]);
         $_SESSION['cart'] = $cart;
-        throw new RuntimeException('That product is not available.');
+        throw new RuntimeException(t('That product is not available.'));
     }
     $stock = round((float) $p['stock_qty'], 3);
     if ($qty - $stock > 0.0005) {
         if ($stock <= 0) {
             unset($cart[$productId]);
             $_SESSION['cart'] = $cart;
-            throw new RuntimeException($p['name'] . ' is out of stock.');
+            throw new RuntimeException(t('{name} is out of stock.', ['name' => (string) $p['name']]));
         }
         $cart[$productId] = $stock;
         $_SESSION['cart'] = $cart;
-        throw new RuntimeException('Only ' . qty_fmt($stock) . ' of ' . $p['name'] . ' is in stock.');
+        throw new RuntimeException(t('Only {qty} of {name} is in stock.', ['qty' => qty_fmt($stock), 'name' => (string) $p['name']]));
     }
     $cart[$productId] = $qty;
     $_SESSION['cart'] = $cart;
@@ -592,7 +593,7 @@ function sale_from_row(array $row): array
 function complete_sale(array $cart, ?float $received, int $userId, string $token): array
 {
     if ($token === '') {
-        throw new RuntimeException('The cart changed. Please check it and charge again.');
+        throw new RuntimeException(t('The cart changed. Please check it and charge again.'));
     }
     $clean = [];
     foreach ($cart as $id => $qty) {
@@ -613,7 +614,7 @@ function complete_sale(array $cart, ?float $received, int $userId, string $token
             return sale_from_row($existing);
         }
         if (!$clean) {
-            throw new RuntimeException('Add a product before charging.');
+            throw new RuntimeException(t('Add a product before charging.'));
         }
         $ids = array_keys($clean);
         sort($ids);
@@ -633,12 +634,12 @@ function complete_sale(array $cart, ?float $received, int $userId, string $token
         $discountTotal = 0.0;
         foreach ($clean as $id => $qty) {
             if (!isset($products[$id]) || !(int) $products[$id]['active']) {
-                throw new RuntimeException('A product in the cart is no longer available.');
+                throw new RuntimeException(t('A product in the cart is no longer available.'));
             }
             $p = $products[$id];
             $stock = round((float) $p['stock_qty'], 3);
             if ($qty - $stock > 0.0005) {
-                throw new RuntimeException($p['name'] . ' only has ' . qty_fmt($stock) . ' in stock.');
+                throw new RuntimeException(t('{name} only has {qty} in stock.', ['name' => (string) $p['name'], 'qty' => qty_fmt($stock)]));
             }
             $salePrice = round((float) $p['sale_price'], 2);
             $offer = discount_for($id, $salePrice);
@@ -666,7 +667,7 @@ function complete_sale(array $cart, ?float $received, int $userId, string $token
         }
         $received = round($received, 2);
         if ($received + 0.001 < $total) {
-            throw new RuntimeException('Cash received is less than the total.');
+            throw new RuntimeException(t('Cash received is less than the total.'));
         }
         $change = round($received - $total, 2);
         $prefix = 'BP' . date('ymd') . '-';
@@ -698,7 +699,7 @@ function complete_sale(array $cart, ?float $received, int $userId, string $token
             }
         }
         if (!$inserted) {
-            throw new RuntimeException('The sale could not be saved. Please try again.');
+            throw new RuntimeException(t('The sale could not be saved. Please try again.'));
         }
         $itemSt = $pdo->prepare('INSERT INTO bp_sale_items (sale_id, product_id, product_name, unit_name, qty, unit_price, discount_amount, line_total, cost_price) VALUES (?,?,?,?,?,?,?,?,?)');
         $stockSt = $pdo->prepare('UPDATE bp_products SET stock_qty = ROUND(stock_qty - ?, 3) WHERE id = ? AND stock_qty + 0.0001 >= ?');
@@ -716,7 +717,7 @@ function complete_sale(array $cart, ?float $received, int $userId, string $token
             ]);
             $stockSt->execute([qty_str($line['qty']), $line['product_id'], qty_str($line['qty'])]);
             if ($stockSt->rowCount() !== 1) {
-                throw new RuntimeException('Stock changed for ' . $line['product_name'] . '. Check the cart and try again.');
+                throw new RuntimeException(t('Stock changed for {name}. Check the cart and try again.', ['name' => (string) $line['product_name']]));
             }
         }
         $pdo->commit();
@@ -757,10 +758,10 @@ function void_sale(int $id, int $userId): void
         $st->execute([$id]);
         $sale = $st->fetch();
         if (!$sale) {
-            throw new RuntimeException('Sale not found.');
+            throw new RuntimeException(t('Sale not found.'));
         }
         if ((int) $sale['voided'] === 1) {
-            throw new RuntimeException('This sale is already void.');
+            throw new RuntimeException(t('This sale is already void.'));
         }
         $items = $pdo->prepare('SELECT * FROM bp_sale_items WHERE sale_id = ?');
         $items->execute([$id]);
@@ -768,7 +769,7 @@ function void_sale(int $id, int $userId): void
         foreach ($items->fetchAll() as $item) {
             $upd->execute([qty_str($item['qty']), (int) $item['product_id']]);
             if ($upd->rowCount() !== 1) {
-                throw new RuntimeException('Stock could not be returned for ' . $item['product_name'] . '.');
+                throw new RuntimeException(t('Stock could not be returned for {name}.', ['name' => (string) $item['product_name']]));
             }
         }
         $mark = $pdo->prepare('UPDATE bp_sales SET voided = 1, voided_at = ?, voided_by = ? WHERE id = ?');
@@ -786,11 +787,11 @@ function create_purchase(array $rawLines, string $date, string $note, bool $upda
 {
     $date = valid_date($date) ?? '';
     if ($date === '') {
-        throw new RuntimeException('Choose the date of this stock in.');
+        throw new RuntimeException(t('Choose the date of this stock in.'));
     }
     $note = trim($note);
     if (bp_strlen($note) > 255) {
-        throw new RuntimeException('The note is too long.');
+        throw new RuntimeException(t('The note is too long.'));
     }
     $merged = [];
     foreach ($rawLines as $line) {
@@ -801,10 +802,10 @@ function create_purchase(array $rawLines, string $date, string $note, bool $upda
         $qty = round((float) ($line['qty'] ?? 0), 3);
         $cost = round((float) ($line['cost'] ?? 0), 2);
         if ($qty <= 0) {
-            throw new RuntimeException('Each product needs a quantity greater than zero.');
+            throw new RuntimeException(t('Each product needs a quantity greater than zero.'));
         }
         if ($cost < 0) {
-            throw new RuntimeException('Cost cannot be negative.');
+            throw new RuntimeException(t('Cost cannot be negative.'));
         }
         if (!isset($merged[$id])) {
             $merged[$id] = ['qty' => 0.0, 'cost' => $cost];
@@ -813,7 +814,7 @@ function create_purchase(array $rawLines, string $date, string $note, bool $upda
         $merged[$id]['cost'] = $cost;
     }
     if (!$merged) {
-        throw new RuntimeException('Add at least one product.');
+        throw new RuntimeException(t('Add at least one product.'));
     }
     ksort($merged);
     $pdo = db();
@@ -831,7 +832,7 @@ function create_purchase(array $rawLines, string $date, string $note, bool $upda
         $ready = [];
         foreach ($merged as $id => $line) {
             if (!isset($products[$id])) {
-                throw new RuntimeException('One of the products was not found.');
+                throw new RuntimeException(t('One of the products was not found.'));
             }
             $lineTotal = round($line['qty'] * $line['cost'], 2);
             $total += $lineTotal;
@@ -890,7 +891,7 @@ function undo_purchase(int $id): void
         $st = $pdo->prepare('SELECT * FROM bp_purchases WHERE id = ? FOR UPDATE');
         $st->execute([$id]);
         if (!$st->fetch()) {
-            throw new RuntimeException('That stock receipt was not found.');
+            throw new RuntimeException(t('That stock receipt was not found.'));
         }
         $items = $pdo->prepare('SELECT * FROM bp_purchase_items WHERE purchase_id = ?');
         $items->execute([$id]);
@@ -899,7 +900,7 @@ function undo_purchase(int $id): void
         foreach ($rows as $item) {
             $upd->execute([qty_str($item['qty']), (int) $item['product_id'], qty_str($item['qty'])]);
             if ($upd->rowCount() !== 1) {
-                throw new RuntimeException('Some of this stock has already been sold, so this receipt cannot be removed.');
+                throw new RuntimeException(t('Some of this stock has already been sold, so this receipt cannot be removed.'));
             }
         }
         $pdo->prepare('DELETE FROM bp_purchase_items WHERE purchase_id = ?')->execute([$id]);
@@ -920,16 +921,16 @@ function save_expense(array $in, ?int $id, int $userId): void
     $amount = round((float) ($in['amount'] ?? 0), 2);
     $date = valid_date(trim((string) ($in['date'] ?? ''))) ?? '';
     if ($title === '' || bp_strlen($title) > 160) {
-        throw new RuntimeException('Enter an expense title.');
+        throw new RuntimeException(t('Enter an expense title.'));
     }
     if (bp_strlen($note) > 255) {
-        throw new RuntimeException('The note is too long.');
+        throw new RuntimeException(t('The note is too long.'));
     }
     if ($amount <= 0) {
-        throw new RuntimeException('Amount must be more than zero.');
+        throw new RuntimeException(t('Amount must be more than zero.'));
     }
     if ($date === '') {
-        throw new RuntimeException('Choose the expense date.');
+        throw new RuntimeException(t('Choose the expense date.'));
     }
     if ($id) {
         $st = db()->prepare('UPDATE bp_expenses SET title = ?, amount = ?, expense_date = ?, note = ? WHERE id = ?');
@@ -938,7 +939,7 @@ function save_expense(array $in, ?int $id, int $userId): void
             $check = db()->prepare('SELECT id FROM bp_expenses WHERE id = ?');
             $check->execute([$id]);
             if (!$check->fetch()) {
-                throw new RuntimeException('That expense was not found.');
+                throw new RuntimeException(t('That expense was not found.'));
             }
         }
         return;
@@ -952,7 +953,7 @@ function delete_expense(int $id): void
     $st = db()->prepare('DELETE FROM bp_expenses WHERE id = ?');
     $st->execute([$id]);
     if ($st->rowCount() < 1) {
-        throw new RuntimeException('That expense was not found.');
+        throw new RuntimeException(t('That expense was not found.'));
     }
 }
 
@@ -965,16 +966,16 @@ function save_employee(array $in, ?int $id = null): int
     $joinedRaw = trim((string) ($in['joined_on'] ?? ''));
     $joined = $joinedRaw === '' ? null : valid_date($joinedRaw);
     if ($name === '' || bp_strlen($name) > 120) {
-        throw new RuntimeException('Employee name is required.');
+        throw new RuntimeException(t('Employee name is required.'));
     }
     if (bp_strlen($phone) > 40 || bp_strlen($position) > 80) {
-        throw new RuntimeException('Phone or position is too long.');
+        throw new RuntimeException(t('Phone or position is too long.'));
     }
     if ($salary < 0) {
-        throw new RuntimeException('Salary cannot be negative.');
+        throw new RuntimeException(t('Salary cannot be negative.'));
     }
     if ($joinedRaw !== '' && !$joined) {
-        throw new RuntimeException('Joined date is not valid.');
+        throw new RuntimeException(t('Joined date is not valid.'));
     }
     $active = !empty($in['active']) ? 1 : 0;
     if ($id) {
@@ -999,23 +1000,23 @@ function save_advance(array $in, int $userId): void
 {
     $employeeId = existing_id('bp_employees', (int) ($in['employee_id'] ?? 0));
     if (!$employeeId) {
-        throw new RuntimeException('Choose an employee.');
+        throw new RuntimeException(t('Choose an employee.'));
     }
     $kind = (string) ($in['kind'] ?? 'advance');
     if (!in_array($kind, ['advance', 'loan'], true)) {
-        throw new RuntimeException('Choose advance or loan.');
+        throw new RuntimeException(t('Choose advance or loan.'));
     }
     $amount = round((float) ($in['amount'] ?? 0), 2);
     $date = valid_date(trim((string) ($in['date'] ?? ''))) ?? '';
     $note = trim((string) ($in['note'] ?? ''));
     if ($amount <= 0) {
-        throw new RuntimeException('Amount must be more than zero.');
+        throw new RuntimeException(t('Amount must be more than zero.'));
     }
     if ($date === '') {
-        throw new RuntimeException('Choose the date.');
+        throw new RuntimeException(t('Choose the date.'));
     }
     if (bp_strlen($note) > 255) {
-        throw new RuntimeException('The note is too long.');
+        throw new RuntimeException(t('The note is too long.'));
     }
     $st = db()->prepare('INSERT INTO bp_advances (employee_id, kind, amount, remaining, given_on, note, user_id, created_at) VALUES (?,?,?,?,?,?,?,?)');
     $st->execute([$employeeId, $kind, money_str($amount), money_str($amount), $date, $note, $userId, date('Y-m-d H:i:s')]);
@@ -1027,17 +1028,17 @@ function delete_advance(int $id): void
     $st->execute([$id]);
     $row = $st->fetch();
     if (!$row) {
-        throw new RuntimeException('That record was not found.');
+        throw new RuntimeException(t('That record was not found.'));
     }
     if (money_str($row['amount']) !== money_str($row['remaining'])) {
-        throw new RuntimeException('This has already been deducted in payroll, so it cannot be removed.');
+        throw new RuntimeException(t('This has already been deducted in payroll, so it cannot be removed.'));
     }
     try {
         $del = db()->prepare('DELETE FROM bp_advances WHERE id = ? AND remaining = amount');
         $del->execute([$id]);
     } catch (PDOException $e) {
         if (is_duplicate_key($e)) {
-            throw new RuntimeException('This has already been deducted in payroll, so it cannot be removed.');
+            throw new RuntimeException(t('This has already been deducted in payroll, so it cannot be removed.'));
         }
         throw $e;
     }
@@ -1047,31 +1048,31 @@ function issue_payroll(array $in, int $userId): void
 {
     $employeeId = existing_id('bp_employees', (int) ($in['employee_id'] ?? 0));
     if (!$employeeId) {
-        throw new RuntimeException('Choose an employee.');
+        throw new RuntimeException(t('Choose an employee.'));
     }
     $month = (int) ($in['month'] ?? 0);
     $year = (int) ($in['year'] ?? 0);
     if ($month < 1 || $month > 12 || $year < 2000 || $year > 2100) {
-        throw new RuntimeException('Choose a valid month.');
+        throw new RuntimeException(t('Choose a valid month.'));
     }
     $paidOn = valid_date(trim((string) ($in['paid_on'] ?? ''))) ?? '';
     if ($paidOn === '') {
-        throw new RuntimeException('Choose the date this salary was paid.');
+        throw new RuntimeException(t('Choose the date this salary was paid.'));
     }
     $base = round((float) ($in['base_salary'] ?? 0), 2);
     $deduct = round((float) ($in['advance_deducted'] ?? 0), 2);
     $note = trim((string) ($in['note'] ?? ''));
     if ($base <= 0) {
-        throw new RuntimeException('Enter the salary for this month.');
+        throw new RuntimeException(t('Enter the salary for this month.'));
     }
     if ($deduct < 0) {
-        throw new RuntimeException('Advance deduction cannot be negative.');
+        throw new RuntimeException(t('Advance deduction cannot be negative.'));
     }
     if ($deduct - $base > 0.001) {
-        throw new RuntimeException('Advance deduction cannot be more than the salary.');
+        throw new RuntimeException(t('Advance deduction cannot be more than the salary.'));
     }
     if (bp_strlen($note) > 255) {
-        throw new RuntimeException('The note is too long.');
+        throw new RuntimeException(t('The note is too long.'));
     }
     $net = round($base - $deduct, 2);
     $pdo = db();
@@ -1080,7 +1081,7 @@ function issue_payroll(array $in, int $userId): void
         $dup = $pdo->prepare('SELECT id FROM bp_payrolls WHERE employee_id = ? AND period_year = ? AND period_month = ? FOR UPDATE');
         $dup->execute([$employeeId, $year, $month]);
         if ($dup->fetch()) {
-            throw new RuntimeException('Payroll for this employee and month is already issued.');
+            throw new RuntimeException(t('Payroll for this employee and month is already issued.'));
         }
         $adv = $pdo->prepare('SELECT * FROM bp_advances WHERE employee_id = ? AND remaining > 0 ORDER BY given_on, id FOR UPDATE');
         $adv->execute([$employeeId]);
@@ -1091,7 +1092,7 @@ function issue_payroll(array $in, int $userId): void
         }
         $balance = round($balance, 2);
         if ($deduct - $balance > 0.001) {
-            throw new RuntimeException('Advance deduction is more than the outstanding balance of ' . money($balance) . '.');
+            throw new RuntimeException(t('Advance deduction is more than the outstanding balance of {amount}.', ['amount' => money($balance)]));
         }
         $ins = $pdo->prepare('INSERT INTO bp_payrolls (employee_id, period_year, period_month, base_salary, advance_deducted, net_pay, paid_on, note, user_id, created_at) VALUES (?,?,?,?,?,?,?,?,?,?)');
         $ins->execute([$employeeId, $year, $month, money_str($base), money_str($deduct), money_str($net), $paidOn, $note, $userId, date('Y-m-d H:i:s')]);
@@ -1113,7 +1114,7 @@ function issue_payroll(array $in, int $userId): void
             $left = round($left - $take, 2);
         }
         if ($left > 0.009) {
-            throw new RuntimeException('The advance balance changed. Please try again.');
+            throw new RuntimeException(t('The advance balance changed. Please try again.'));
         }
         $pdo->commit();
     } catch (Throwable $e) {
@@ -1121,7 +1122,7 @@ function issue_payroll(array $in, int $userId): void
             $pdo->rollBack();
         }
         if (is_duplicate_key($e)) {
-            throw new RuntimeException('Payroll for this employee and month is already issued.');
+            throw new RuntimeException(t('Payroll for this employee and month is already issued.'));
         }
         throw $e;
     }
@@ -1135,7 +1136,7 @@ function undo_payroll(int $id): void
         $st = $pdo->prepare('SELECT * FROM bp_payrolls WHERE id = ? FOR UPDATE');
         $st->execute([$id]);
         if (!$st->fetch()) {
-            throw new RuntimeException('That payroll was not found.');
+            throw new RuntimeException(t('That payroll was not found.'));
         }
         $deds = $pdo->prepare('SELECT * FROM bp_payroll_deductions WHERE payroll_id = ?');
         $deds->execute([$id]);
@@ -1162,16 +1163,18 @@ function save_settings(array $in): void
     $footer = trim((string) ($in['receipt_footer'] ?? ''));
     $tz = trim((string) ($in['timezone'] ?? ''));
     if ($name === '' || bp_strlen($name) > 120) {
-        throw new RuntimeException('Shop name is required.');
+        throw new RuntimeException(t('Shop name is required.'));
     }
-    if ($currency === '' || bp_strlen($currency) > 10) {
-        throw new RuntimeException('Enter a short currency symbol, such as Rs.');
+    $allowedCurrency = array_keys(currency_choices());
+    if (!in_array($currency, $allowedCurrency, true) && $currency !== setting('currency_symbol', '')) {
+        throw new RuntimeException(t('Choose a currency.'));
     }
     if (bp_strlen($phone) > 40 || bp_strlen($address) > 255 || bp_strlen($footer) > 180) {
-        throw new RuntimeException('Phone, address, or receipt note is too long.');
+        throw new RuntimeException(t('Phone, address, or receipt note is too long.'));
     }
-    if (!in_array($tz, timezone_identifiers_list(), true)) {
-        throw new RuntimeException('Choose a timezone.');
+    $allowedTz = array_keys(timezone_choices());
+    if ((!in_array($tz, $allowedTz, true) && $tz !== setting('timezone', '')) || !in_array($tz, timezone_identifiers_list(), true)) {
+        throw new RuntimeException(t('Choose a timezone.'));
     }
     $st = db()->prepare('UPDATE bp_settings SET business_name = ?, currency_symbol = ?, phone = ?, address = ?, receipt_footer = ?, timezone = ? WHERE id = 1');
     $st->execute([$name, $currency, $phone, $address, $footer, $tz]);
@@ -1200,16 +1203,16 @@ function update_user_login(int $userId, string $username, string $fullName, ?str
     $username = trim($username);
     $fullName = trim($fullName);
     if (!preg_match('/^[A-Za-z0-9._-]{3,50}$/', $username)) {
-        throw new RuntimeException('Username must be 3 to 50 letters, numbers, dots, or dashes.');
+        throw new RuntimeException(t('Username must be 3 to 50 letters, numbers, dots, or dashes.'));
     }
     if ($fullName === '' || bp_strlen($fullName) > 100) {
-        throw new RuntimeException('Enter the person\'s name.');
+        throw new RuntimeException(t('Enter the person\'s name.'));
     }
     if ($newPassword !== null && $newPassword !== '' && strlen($newPassword) < 6) {
-        throw new RuntimeException('Use at least 6 characters for the password.');
+        throw new RuntimeException(t('Use at least 6 characters for the password.'));
     }
     if ($newPassword !== null && strlen($newPassword) > 200) {
-        throw new RuntimeException('That password is too long.');
+        throw new RuntimeException(t('That password is too long.'));
     }
     try {
         if ($newPassword !== null && $newPassword !== '') {
@@ -1221,7 +1224,7 @@ function update_user_login(int $userId, string $username, string $fullName, ?str
         }
     } catch (PDOException $e) {
         if (is_duplicate_key($e)) {
-            throw new RuntimeException('That username is already used.');
+            throw new RuntimeException(t('That username is already used.'));
         }
         throw $e;
     }
@@ -1267,7 +1270,7 @@ function sales_series(int $days = 7): array
         $day = date('Y-m-d', strtotime($start . ' +' . $i . ' days'));
         $out[] = [
             'day' => $day,
-            'label' => date('D', strtotime($day)),
+            'label' => t(date('D', strtotime($day))),
             'total' => round((float) ($map[$day]['total'] ?? 0), 2),
         ];
     }

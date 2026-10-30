@@ -17,6 +17,8 @@ There are two logins:
 - HR: employees, salary, advances, loans, and payroll
 - Reports: daily sales, custom dates, monthly sales, and monthly profit / loss
 - Discounts as a fixed amount or a percentage, on all products or selected products
+- English or Azerbaijani, chosen on the login screen
+- Currency and timezone chosen during install, including the Azerbaijani manat (₼) and Asia/Baku
 
 Profit for a month is:
 
@@ -31,8 +33,10 @@ An advance that is later deducted from salary is not counted twice.
 3. Upload this whole folder into `public_html`, or into a subfolder such as `public_html/pos`.
 4. In cPanel, open **Select PHP Version** and choose **PHP 8.0 or newer**. Enable **pdo_mysql**.
 5. Visit `https://yourdomain.com/install.php` (add `/pos` if you used a subfolder).
-6. Enter the database name, user, and password. Set the admin and cashier passwords.
-7. Log in. The admin sees the dashboard. The cashier sees only the sale screen.
+6. Enter the database name, user, and password. Choose the currency and timezone, then set the admin and cashier passwords.
+7. Log in and choose English or Azerbaijani. The admin sees the dashboard. The cashier sees only the sale screen.
+
+Currency and timezone can also be changed later in Settings. The language is chosen again each time someone logs in, and the browser remembers the last choice.
 
 The installer creates tables whose names start with `bp_`, so they can share a database with another app. After a successful install, opening `install.php` again will not wipe your data.
 

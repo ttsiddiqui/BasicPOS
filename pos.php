@@ -55,14 +55,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if (!empty($_SESSION['last_sale_id'])) {
                     redirect('receipt.php?id=' . (int) $_SESSION['last_sale_id'] . '&print=1');
                 }
-                throw new RuntimeException('The cart changed. Please check it and charge again.');
+                throw new RuntimeException(t('The cart changed. Please check it and charge again.'));
             }
             $raw = trim((string) ($_POST['amount_received'] ?? ''));
             $received = null;
             if ($raw !== '') {
                 $normalized = str_replace([',', ' '], '', $raw);
                 if (!is_numeric($normalized)) {
-                    throw new RuntimeException('Enter the cash received as a number, or leave it empty for the exact amount.');
+                    throw new RuntimeException(t('Enter the cash received as a number, or leave it empty for the exact amount.'));
                 }
                 $received = (float) $normalized;
             }
@@ -72,7 +72,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['checkout_token'] = bin2hex(random_bytes(16));
             redirect('receipt.php?id=' . (int) $result['id'] . '&print=1');
         } else {
-            throw new RuntimeException('That action is not available.');
+            throw new RuntimeException(t('That action is not available.'));
         }
         redirect('pos.php' . $next);
     } catch (RuntimeException $e) {
@@ -126,13 +126,13 @@ layout_start('Sale', 'pos');
       <?php weak_password_note(); render_flash(); ?>
     </div>
     <div class="pos-tools">
-      <h1>Sale</h1>
+      <h1><?= tx('Sale') ?></h1>
       <form method="post" class="search-form">
         <?= csrf_field() ?>
         <input type="hidden" name="action" value="find">
         <?= $keep() ?>
-        <input id="posSearch" name="q" value="<?= e($q) ?>" placeholder="Scan barcode or search name / code" autocomplete="off" enterkeyhint="search">
-        <button class="btn btn-dark" type="submit"><?= icon('search', 22) ?> Find</button>
+        <input id="posSearch" name="q" value="<?= e($q) ?>" placeholder="<?= tx('Scan barcode or search name / code') ?>" autocomplete="off" enterkeyhint="search">
+        <button class="btn btn-dark" type="submit"><?= icon('search', 22) ?> <?= tx('Find') ?></button>
       </form>
       <nav class="chips">
         <?php
@@ -141,7 +141,7 @@ layout_start('Sale', 'pos');
               $base['q'] = $q;
           }
         ?>
-        <a class="chip<?= $cat === 0 ? ' active' : '' ?>" href="<?= e(url('pos.php' . ($base ? '?' . http_build_query($base) : ''))) ?>">All</a>
+        <a class="chip<?= $cat === 0 ? ' active' : '' ?>" href="<?= e(url('pos.php' . ($base ? '?' . http_build_query($base) : ''))) ?>"><?= tx('All') ?></a>
         <?php foreach ($categories as $category): ?>
           <?php $params = $base; $params['cat'] = (int) $category['id']; ?>
           <a class="chip<?= $cat === (int) $category['id'] ? ' active' : '' ?>" href="<?= e(url('pos.php?' . http_build_query($params))) ?>"><?= e((string) $category['name']) ?></a>
@@ -150,7 +150,7 @@ layout_start('Sale', 'pos');
     </div>
     <div class="catalog">
       <?php if (!$products): ?>
-        <?= empty_state('box', 'No matching products', 'Try another word, or ask the admin to add the product.') ?>
+        <?= empty_state('box', t('No matching products'), t('Try another word, or ask the admin to add the product.')) ?>
       <?php else: ?>
         <div class="product-grid">
           <?php foreach ($products as $product): ?>
@@ -174,10 +174,10 @@ layout_start('Sale', 'pos');
               <input type="hidden" name="product_id" value="<?= $id ?>">
               <?= $keep() ?>
               <button class="product-card" type="submit"<?= $available <= 0 ? ' disabled' : '' ?>>
-                <span class="meta"><?= e((string) ($product['category_name'] ?: 'Product')) ?></span>
+                <span class="meta"><?= e((string) ($product['category_name'] ?: t('Product'))) ?></span>
                 <span class="name"><?= e((string) $product['name']) ?></span>
                 <?php if ($offer['unit_discount'] > 0): ?>
-                  <span class="badge badge-hot">Save <?= e(money($offer['unit_discount'])) ?></span>
+                  <span class="badge badge-hot"><?= tx('Save {amount}', ['amount' => money($offer['unit_discount'])]) ?></span>
                 <?php endif; ?>
                 <?php if ($offer['unit_discount'] > 0): ?>
                   <span class="was"><?= e(money($product['sale_price'])) ?></span>
@@ -185,10 +185,10 @@ layout_start('Sale', 'pos');
                 <span class="price"><?= e(money($offer['net'])) ?></span>
                 <span class="meta">
                   <?php if ($available <= 0): ?>
-                    Out of stock
+                    <?= tx('Out of stock') ?>
                   <?php else: ?>
-                    <?= e(qty_fmt($available)) ?> <?= e((string) ($product['unit_name'] ?? '')) ?> left
-                    <?php if ($held > 0): ?> · <?= e(qty_fmt($held)) ?> in cart<?php endif; ?>
+                    <?= tx('{qty} {unit} left', ['qty' => qty_fmt($available), 'unit' => (string) ($product['unit_name'] ?? '')]) ?>
+                    <?php if ($held > 0): ?> · <?= tx('{qty} in cart', ['qty' => qty_fmt($held)]) ?><?php endif; ?>
                   <?php endif; ?>
                 </span>
               </button>
@@ -201,19 +201,19 @@ layout_start('Sale', 'pos');
 
   <aside class="cart-panel" id="cartPanel">
     <div class="cart-head">
-      <h2>Current sale</h2>
-      <button class="icon-btn cart-close" id="cartClose" type="button" aria-label="Close cart"><?= icon('close', 22) ?></button>
+      <h2><?= tx('Current sale') ?></h2>
+      <button class="icon-btn cart-close" id="cartClose" type="button" aria-label="<?= tx('Close cart') ?>"><?= icon('close', 22) ?></button>
       <?php if ($cart['count'] > 0): ?>
-        <form method="post" data-confirm="Clear this sale?">
+        <form method="post" data-confirm="<?= tx('Clear this sale?') ?>">
           <?= csrf_field() ?>
           <input type="hidden" name="action" value="clear">
-          <button class="btn btn-ghost btn-sm" type="submit">Clear</button>
+          <button class="btn btn-ghost btn-sm" type="submit"><?= tx('Clear') ?></button>
         </form>
       <?php endif; ?>
     </div>
     <div class="cart-lines">
       <?php if (!$cart['lines']): ?>
-        <?= empty_state('cart', 'Cart is empty', 'Tap a product, or scan its barcode and press enter.') ?>
+        <?= empty_state('cart', t('Cart is empty'), t('Tap a product, or scan its barcode and press enter.')) ?>
       <?php else: ?>
         <?php foreach ($cart['lines'] as $line): ?>
           <div class="cart-row">
@@ -222,17 +222,17 @@ layout_start('Sale', 'pos');
               <span class="line-price"><?= e(money($line['line_total'])) ?></span>
             </div>
             <?php if ($line['discount'] > 0): ?>
-              <div class="hint"><?= e((string) $line['label']) ?> · save <?= e(money($line['discount'])) ?></div>
+              <div class="hint"><?= e((string) $line['label']) ?> · <?= tx('save') ?> <?= e(money($line['discount'])) ?></div>
             <?php endif; ?>
             <form method="post" class="stepper">
               <?= csrf_field() ?>
               <?= $keep() ?>
               <input type="hidden" name="product_id" value="<?= (int) $line['id'] ?>">
-              <button class="sr-submit" type="submit" name="action" value="set">Update quantity</button>
-              <button class="icon-btn" type="submit" name="action" value="dec" aria-label="Decrease"><?= icon('minus', 20) ?></button>
-              <input name="qty" inputmode="decimal" value="<?= e(qty_fmt($line['qty'])) ?>" aria-label="Quantity">
-              <button class="icon-btn" type="submit" name="action" value="inc" aria-label="Increase"><?= icon('plus', 20) ?></button>
-              <button class="icon-btn" type="submit" name="action" value="remove" aria-label="Remove"><?= icon('trash', 18) ?></button>
+              <button class="sr-submit" type="submit" name="action" value="set"><?= tx('Update quantity') ?></button>
+              <button class="icon-btn" type="submit" name="action" value="dec" aria-label="<?= tx('Decrease') ?>"><?= icon('minus', 20) ?></button>
+              <input name="qty" inputmode="decimal" value="<?= e(qty_fmt($line['qty'])) ?>" aria-label="<?= tx('Quantity') ?>">
+              <button class="icon-btn" type="submit" name="action" value="inc" aria-label="<?= tx('Increase') ?>"><?= icon('plus', 20) ?></button>
+              <button class="icon-btn" type="submit" name="action" value="remove" aria-label="<?= tx('Remove') ?>"><?= icon('trash', 18) ?></button>
             </form>
           </div>
         <?php endforeach; ?>
@@ -242,19 +242,19 @@ layout_start('Sale', 'pos');
       <?= csrf_field() ?>
       <input type="hidden" name="action" value="checkout">
       <input type="hidden" name="checkout_token" value="<?= e((string) $_SESSION['checkout_token']) ?>">
-      <div class="total-line"><span>Subtotal</span><strong><?= e(money($cart['subtotal'])) ?></strong></div>
-      <div class="total-line"><span>Discount</span><strong><?= e(money($cart['discount'])) ?></strong></div>
-      <div class="total-line" id="payTotal" data-total="<?= e(money_str($cart['total'])) ?>"><span>Total</span><strong><?= e(money($cart['total'])) ?></strong></div>
-      <label class="field">Cash received
-        <input id="tender" name="amount_received" inputmode="decimal" autocomplete="off" placeholder="Leave empty for exact">
+      <div class="total-line"><span><?= tx('Subtotal') ?></span><strong><?= e(money($cart['subtotal'])) ?></strong></div>
+      <div class="total-line"><span><?= tx('Discount') ?></span><strong><?= e(money($cart['discount'])) ?></strong></div>
+      <div class="total-line" id="payTotal" data-total="<?= e(money_str($cart['total'])) ?>"><span><?= tx('Total') ?></span><strong><?= e(money($cart['total'])) ?></strong></div>
+      <label class="field"><?= tx('Cash received') ?>
+        <input id="tender" name="amount_received" inputmode="decimal" autocomplete="off" placeholder="<?= tx('Leave empty for exact') ?>">
       </label>
-      <div id="changeOut" class="big-change">Exact amount</div>
-      <button class="btn btn-primary btn-lg" type="submit"<?= $cart['count'] === 0 ? ' disabled' : '' ?>><?= icon('check', 22) ?> Charge <?= e(money($cart['total'])) ?></button>
+      <div id="changeOut" class="big-change"><?= tx('Exact amount') ?></div>
+      <button class="btn btn-primary btn-lg" type="submit"<?= $cart['count'] === 0 ? ' disabled' : '' ?>><?= icon('check', 22) ?> <?= tx('Charge') ?> <?= e(money($cart['total'])) ?></button>
     </form>
   </aside>
 </div>
 <button class="cart-fab" id="cartFab" type="button">
-  <span><?= icon('cart', 22) ?> <?= (int) $cart['count'] ?> in cart</span>
+  <span><?= icon('cart', 22) ?> <?= tx('{n} in cart', ['n' => (string) (int) $cart['count']]) ?></span>
   <strong><?= e(money($cart['total'])) ?></strong>
 </button>
 <?php layout_end(); ?>

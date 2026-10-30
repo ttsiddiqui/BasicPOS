@@ -29,7 +29,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             flash('success', 'Discount removed.');
             redirect('discounts.php');
         } else {
-            throw new RuntimeException('That action is not available.');
+            throw new RuntimeException(t('That action is not available.'));
         }
     } catch (RuntimeException $e) {
         if ($action === 'save') {
@@ -78,41 +78,41 @@ layout_start('Discounts', 'discounts');
 ?>
 <div class="page-head">
   <div>
-    <h1>Discounts</h1>
-    <p>Take a fixed amount or a percentage off every product, or only the ones you pick. If two discounts match, the customer gets the bigger saving.</p>
+    <h1><?= tx('Discounts') ?></h1>
+    <p><?= tx('Take a fixed amount or a percentage off every product, or only the ones you pick. If two discounts match, the customer gets the bigger saving.') ?></p>
   </div>
 </div>
-<?php if ($error): ?><div class="flash flash-error"><?= e($error) ?></div><?php endif; ?>
+<?php if ($error): ?><div class="flash flash-error"><?= e(t($error)) ?></div><?php endif; ?>
 <form class="card" method="post" id="discountForm">
   <?= csrf_field() ?>
   <input type="hidden" name="action" value="save">
   <input type="hidden" name="id" value="<?= $editing ? (int) $editing['id'] : 0 ?>">
-  <h2><?= $editing ? 'Edit discount' : 'New discount' ?></h2>
+  <h2><?= $editing ? tx('Edit discount') : tx('New discount') ?></h2>
   <div class="form-grid">
-    <label class="field span-2">Name<input name="name" required maxlength="120" value="<?= e($value('name')) ?>" placeholder="Weekend offer"></label>
-    <label class="field">Type
+    <label class="field span-2"><?= tx('Name') ?><input name="name" required maxlength="120" value="<?= e($value('name')) ?>" placeholder="<?= tx('Weekend offer') ?>"></label>
+    <label class="field"><?= tx('Type') ?>
       <select name="discount_type">
-        <option value="percent"<?= $type === 'percent' ? ' selected' : '' ?>>Percentage</option>
-        <option value="fixed"<?= $type === 'fixed' ? ' selected' : '' ?>>Fixed amount</option>
+        <option value="percent"<?= $type === 'percent' ? ' selected' : '' ?>><?= tx('Percentage') ?></option>
+        <option value="fixed"<?= $type === 'fixed' ? ' selected' : '' ?>><?= tx('Fixed amount') ?></option>
       </select>
     </label>
-    <label class="field">Value<input name="discount_value" type="number" min="0.01" step="0.01" required value="<?= e($value('discount_value')) ?>"></label>
-    <label class="field">Applies to
+    <label class="field"><?= tx('Value') ?><input name="discount_value" type="number" min="0.01" step="0.01" required value="<?= e($value('discount_value')) ?>"></label>
+    <label class="field"><?= tx('Applies to') ?>
       <select name="apply_to">
-        <option value="all"<?= $apply === 'all' ? ' selected' : '' ?>>All products</option>
-        <option value="selected"<?= $apply === 'selected' ? ' selected' : '' ?>>Selected products</option>
+        <option value="all"<?= $apply === 'all' ? ' selected' : '' ?>><?= tx('All products') ?></option>
+        <option value="selected"<?= $apply === 'selected' ? ' selected' : '' ?>><?= tx('Selected products') ?></option>
       </select>
     </label>
-    <label class="check"><input type="checkbox" name="active" value="1"<?= $activeChecked ? ' checked' : '' ?>> Active</label>
-    <label class="field">Starts<input type="date" name="starts_on" value="<?= e($value('starts_on')) ?>"></label>
-    <label class="field">Ends<input type="date" name="ends_on" value="<?= e($value('ends_on')) ?>"></label>
+    <label class="check"><input type="checkbox" name="active" value="1"<?= $activeChecked ? ' checked' : '' ?>> <?= tx('Active') ?></label>
+    <label class="field"><?= tx('Starts') ?><input type="date" name="starts_on" value="<?= e($value('starts_on')) ?>"></label>
+    <label class="field"><?= tx('Ends') ?><input type="date" name="ends_on" value="<?= e($value('ends_on')) ?>"></label>
   </div>
   <div id="productPicks" class="stack">
-    <p class="hint">Tick products only when this discount is for selected products.</p>
-    <label class="field">Find a product<input id="filterProducts" type="search" placeholder="Type a name or code"></label>
+    <p class="hint"><?= tx('Tick products only when this discount is for selected products.') ?></p>
+    <label class="field"><?= tx('Find a product') ?><input id="filterProducts" type="search" placeholder="<?= tx('Type a name or code') ?>"></label>
     <div class="check-list">
       <?php if (!$products): ?>
-        <p class="hint">Add a product first.</p>
+        <p class="hint"><?= tx('Add a product first.') ?></p>
       <?php endif; ?>
       <?php foreach ($products as $product): ?>
         <label class="check-row" data-name="<?= e(bp_lower((string) $product['name'] . ' ' . (string) $product['product_code'])) ?>">
@@ -123,32 +123,32 @@ layout_start('Discounts', 'discounts');
     </div>
   </div>
   <div class="form-actions">
-    <button class="btn btn-primary" type="submit"><?= icon('check', 20) ?> Save discount</button>
-    <?php if ($editing): ?><a class="btn btn-ghost" href="<?= e(url('discounts.php')) ?>">Cancel</a><?php endif; ?>
+    <button class="btn btn-primary" type="submit"><?= icon('check', 20) ?> <?= tx('Save discount') ?></button>
+    <?php if ($editing): ?><a class="btn btn-ghost" href="<?= e(url('discounts.php')) ?>"><?= tx('Cancel') ?></a><?php endif; ?>
   </div>
 </form>
 
 <section class="card">
-  <h2>Current discounts</h2>
+  <h2><?= tx('Current discounts') ?></h2>
   <?php if (!$discounts): ?>
-    <?= empty_state('percent', 'No discounts yet', 'A discount applies on the sale screen while it is active.') ?>
+    <?= empty_state('percent', t('No discounts yet'), t('A discount applies on the sale screen while it is active.')) ?>
   <?php else: ?>
     <div class="table-wrap">
       <table class="data stack">
-        <thead><tr><th>Name</th><th>Offer</th><th>Products</th><th>Dates</th><th>Status</th><th></th></tr></thead>
+        <thead><tr><th><?= tx('Name') ?></th><th><?= tx('Offer') ?></th><th><?= tx('Products') ?></th><th><?= tx('Dates') ?></th><th><?= tx('Status') ?></th><th></th></tr></thead>
         <tbody>
           <?php foreach ($discounts as $discount): ?>
             <?php
-              $status = 'Live';
+              $status = t('Live');
               $badge = 'badge';
               if (!(int) $discount['active']) {
-                  $status = 'Off';
+                  $status = t('Off');
                   $badge = 'badge badge-off';
               } elseif (!empty($discount['starts_on']) && $discount['starts_on'] > $today) {
-                  $status = 'Scheduled';
+                  $status = t('Scheduled');
                   $badge = 'badge badge-warn';
               } elseif (!empty($discount['ends_on']) && $discount['ends_on'] < $today) {
-                  $status = 'Ended';
+                  $status = t('Ended');
                   $badge = 'badge badge-off';
               }
               $offer = $discount['discount_type'] === 'percent'
@@ -156,18 +156,18 @@ layout_start('Discounts', 'discounts');
                   : money($discount['discount_value']);
             ?>
             <tr>
-              <td data-label="Name"><strong><?= e((string) $discount['name']) ?></strong></td>
-              <td data-label="Offer"><?= e($offer) ?> off</td>
-              <td data-label="Products"><?= $discount['apply_to'] === 'all' ? 'All products' : 'Selected' ?></td>
-              <td data-label="Dates"><?= e(trim(day_fmt($discount['starts_on'] ?: null) . ' – ' . day_fmt($discount['ends_on'] ?: null), ' –')) ?: 'Any day' ?></td>
-              <td data-label="Status"><span class="<?= e($badge) ?>"><?= e($status) ?></span></td>
+              <td data-label="<?= tx('Name') ?>"><strong><?= e((string) $discount['name']) ?></strong></td>
+              <td data-label="<?= tx('Offer') ?>"><?= tx('{offer} off', ['offer' => $offer]) ?></td>
+              <td data-label="<?= tx('Products') ?>"><?= $discount['apply_to'] === 'all' ? tx('All products') : tx('Selected') ?></td>
+              <td data-label="<?= tx('Dates') ?>"><?= e(trim(day_fmt($discount['starts_on'] ?: null) . ' – ' . day_fmt($discount['ends_on'] ?: null), ' –')) ?: tx('Any day') ?></td>
+              <td data-label="<?= tx('Status') ?>"><span class="<?= e($badge) ?>"><?= e($status) ?></span></td>
               <td class="actions" data-label="">
-                <a class="btn btn-ghost btn-sm" href="<?= e(url('discounts.php?edit=' . (int) $discount['id'])) ?>"><?= icon('edit', 18) ?> Edit</a>
-                <form method="post" data-confirm="Remove this discount?">
+                <a class="btn btn-ghost btn-sm" href="<?= e(url('discounts.php?edit=' . (int) $discount['id'])) ?>"><?= icon('edit', 18) ?> <?= tx('Edit') ?></a>
+                <form method="post" data-confirm="<?= tx('Remove this discount?') ?>">
                   <?= csrf_field() ?>
                   <input type="hidden" name="action" value="delete">
                   <input type="hidden" name="id" value="<?= (int) $discount['id'] ?>">
-                  <button class="btn btn-danger btn-sm" type="submit"><?= icon('trash', 18) ?> Remove</button>
+                  <button class="btn btn-danger btn-sm" type="submit"><?= icon('trash', 18) ?> <?= tx('Remove') ?></button>
                 </form>
               </td>
             </tr>

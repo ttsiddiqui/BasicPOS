@@ -33,7 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             flash('success', 'That stock receipt was removed and the quantities were taken back.');
             redirect('inventory.php');
         } else {
-            throw new RuntimeException('That action is not available.');
+            throw new RuntimeException(t('That action is not available.'));
         }
     } catch (RuntimeException $e) {
         if ($action === 'receive') {
@@ -60,21 +60,21 @@ if ($history) {
 
 $line = static function (array $products): void {
     echo '<div class="stock-line">';
-    echo '<select name="product_id[]"><option value="">Choose a product</option>';
+    echo '<select name="product_id[]"><option value="">' . e(t('Choose a product')) . '</option>';
     foreach ($products as $product) {
         $label = $product['name'];
         if ($product['product_code']) {
             $label .= ' · ' . $product['product_code'];
         }
         if (!(int) $product['active']) {
-            $label .= ' (hidden)';
+            $label .= t(' (hidden)');
         }
         echo '<option value="' . (int) $product['id'] . '" data-cost="' . e(money_str($product['cost_price'])) . '">' . e($label) . '</option>';
     }
     echo '</select>';
-    echo '<input name="qty[]" type="number" min="0.001" step="0.001" value="1" aria-label="Quantity" required>';
-    echo '<input class="cost" name="cost[]" type="number" min="0" step="0.01" value="0" aria-label="Cost" required>';
-    echo '<button class="btn btn-ghost btn-sm remove-line" type="button">Remove</button>';
+    echo '<input name="qty[]" type="number" min="0.001" step="0.001" value="1" aria-label="' . e(t('Quantity')) . '" required>';
+    echo '<input class="cost" name="cost[]" type="number" min="0" step="0.01" value="0" aria-label="' . e(t('Cost')) . '" required>';
+    echo '<button class="btn btn-ghost btn-sm remove-line" type="button">' . e(t('Remove')) . '</button>';
     echo '</div>';
 };
 
@@ -82,53 +82,53 @@ layout_start('Stock in', 'inventory');
 ?>
 <div class="page-head">
   <div>
-    <h1>Stock in</h1>
-    <p>Receive products into the shop. This increases stock and counts as a purchase in the profit report.</p>
+    <h1><?= tx('Stock in') ?></h1>
+    <p><?= tx('Receive products into the shop. This increases stock and counts as a purchase in the profit report.') ?></p>
   </div>
 </div>
 
-<?php if ($error): ?><div class="flash flash-error"><?= e($error) ?></div><?php endif; ?>
+<?php if ($error): ?><div class="flash flash-error"><?= e(t($error)) ?></div><?php endif; ?>
 
 <form class="card" method="post" id="stockForm">
   <?= csrf_field() ?>
   <input type="hidden" name="action" value="receive">
   <div class="form-grid">
-    <label class="field">Date<input type="date" name="purchased_on" required value="<?= e(post_str('purchased_on') !== '' ? post_str('purchased_on') : date('Y-m-d')) ?>"></label>
-    <label class="field">Note<input name="note" maxlength="255" placeholder="Supplier or bill number" value="<?= e($error ? post_str('note') : '') ?>"></label>
+    <label class="field"><?= tx('Date') ?><input type="date" name="purchased_on" required value="<?= e(post_str('purchased_on') !== '' ? post_str('purchased_on') : date('Y-m-d')) ?>"></label>
+    <label class="field"><?= tx('Note') ?><input name="note" maxlength="255" placeholder="<?= tx('Supplier or bill number') ?>" value="<?= e($error ? post_str('note') : '') ?>"></label>
   </div>
-  <p class="hint">Quantity and cost for each product. Cost is per unit.</p>
+  <p class="hint"><?= tx('Quantity and cost for each product. Cost is per unit.') ?></p>
   <div id="stockLines">
     <?php $line($products); ?>
   </div>
   <template id="stockLineTpl"><?php $line($products); ?></template>
-  <button class="btn btn-ghost" id="addStockLine" type="button"><?= icon('plus', 20) ?> Add another product</button>
-  <label class="check"><input type="checkbox" name="update_cost" value="1" checked> Update each product's cost price to this cost</label>
+  <button class="btn btn-ghost" id="addStockLine" type="button"><?= icon('plus', 20) ?> <?= tx('Add another product') ?></button>
+  <label class="check"><input type="checkbox" name="update_cost" value="1" checked> <?= tx("Update each product's cost price to this cost") ?></label>
   <div class="form-actions">
-    <button class="btn btn-primary" type="submit"><?= icon('inbox', 20) ?> Save stock in</button>
+    <button class="btn btn-primary" type="submit"><?= icon('inbox', 20) ?> <?= tx('Save stock in') ?></button>
   </div>
 </form>
 
 <section class="card">
-  <h2>Recent receipts</h2>
+  <h2><?= tx('Recent receipts') ?></h2>
   <?php if (!$history): ?>
-    <?= empty_state('inbox', 'No stock receipts yet', 'When you receive products, they will be listed here.') ?>
+    <?= empty_state('inbox', t('No stock receipts yet'), t('When you receive products, they will be listed here.')) ?>
   <?php else: ?>
     <div class="table-wrap">
       <table class="data stack">
-        <thead><tr><th>Receipt</th><th>Date</th><th>Products</th><th class="num">Cost</th><th></th></tr></thead>
+        <thead><tr><th><?= tx('Receipt') ?></th><th><?= tx('Date') ?></th><th><?= tx('Products') ?></th><th class="num"><?= tx('Cost') ?></th><th></th></tr></thead>
         <tbody>
           <?php foreach ($history as $row): ?>
             <tr>
-              <td data-label="Receipt"><strong><?= e((string) $row['reference_no']) ?></strong><br><small class="muted"><?= e((string) $row['full_name']) ?></small></td>
-              <td data-label="Date"><?= e(day_fmt((string) $row['purchased_on'])) ?></td>
-              <td data-label="Products"><?= e(implode(', ', $itemMap[(int) $row['id']] ?? [])) ?><?= $row['note'] ? '<br><small class="muted">' . e((string) $row['note']) . '</small>' : '' ?></td>
-              <td class="num" data-label="Cost"><?= e(money($row['total_cost'])) ?></td>
+              <td data-label="<?= tx('Receipt') ?>"><strong><?= e((string) $row['reference_no']) ?></strong><br><small class="muted"><?= e((string) $row['full_name']) ?></small></td>
+              <td data-label="<?= tx('Date') ?>"><?= e(day_fmt((string) $row['purchased_on'])) ?></td>
+              <td data-label="<?= tx('Products') ?>"><?= e(implode(', ', $itemMap[(int) $row['id']] ?? [])) ?><?= $row['note'] ? '<br><small class="muted">' . e((string) $row['note']) . '</small>' : '' ?></td>
+              <td class="num" data-label="<?= tx('Cost') ?>"><?= e(money($row['total_cost'])) ?></td>
               <td class="actions" data-label="">
-                <form method="post" data-confirm="Remove this receipt and take the quantities out of stock? Product cost prices stay as they are now.">
+                <form method="post" data-confirm="<?= tx('Remove this receipt and take the quantities out of stock? Product cost prices stay as they are now.') ?>">
                   <?= csrf_field() ?>
                   <input type="hidden" name="action" value="undo">
                   <input type="hidden" name="id" value="<?= (int) $row['id'] ?>">
-                  <button class="btn btn-danger btn-sm" type="submit"><?= icon('trash', 18) ?> Undo</button>
+                  <button class="btn btn-danger btn-sm" type="submit"><?= icon('trash', 18) ?> <?= tx('Undo') ?></button>
                 </form>
               </td>
             </tr>

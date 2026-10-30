@@ -24,7 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             flash('success', 'Expense removed.');
             redirect('expenses.php');
         } else {
-            throw new RuntimeException('That action is not available.');
+            throw new RuntimeException(t('That action is not available.'));
         }
     } catch (RuntimeException $e) {
         if ($action === 'save') {
@@ -61,48 +61,48 @@ layout_start('Expenses', 'expenses');
 ?>
 <div class="page-head">
   <div>
-    <h1>Expenses</h1>
-    <p>Record money the shop spends, such as rent, bills, or supplies.</p>
+    <h1><?= tx('Expenses') ?></h1>
+    <p><?= tx('Record money the shop spends, such as rent, bills, or supplies.') ?></p>
   </div>
 </div>
-<?php if ($error): ?><div class="flash flash-error"><?= e($error) ?></div><?php endif; ?>
+<?php if ($error): ?><div class="flash flash-error"><?= e(t($error)) ?></div><?php endif; ?>
 <form class="card" method="post">
   <?= csrf_field() ?>
   <input type="hidden" name="action" value="save">
   <input type="hidden" name="id" value="<?= $editing ? (int) $editing['id'] : 0 ?>">
-  <h2><?= $editing ? 'Edit expense' : 'New expense' ?></h2>
+  <h2><?= $editing ? tx('Edit expense') : tx('New expense') ?></h2>
   <div class="form-grid">
-    <label class="field span-2">Title<input name="title" required maxlength="160" value="<?= e($value('title')) ?>" placeholder="Rent, electricity, delivery"></label>
-    <label class="field">Amount<input name="amount" type="number" min="0.01" step="0.01" required value="<?= e($value('amount')) ?>"></label>
-    <label class="field">Date<input type="date" name="expense_date" required value="<?= e($value('expense_date', date('Y-m-d'))) ?>"></label>
-    <label class="field span-2">Note<input name="note" maxlength="255" value="<?= e($value('note')) ?>"></label>
+    <label class="field span-2"><?= tx('Title') ?><input name="title" required maxlength="160" value="<?= e($value('title')) ?>" placeholder="<?= tx('Rent, electricity, delivery') ?>"></label>
+    <label class="field"><?= tx('Amount') ?><input name="amount" type="number" min="0.01" step="0.01" required value="<?= e($value('amount')) ?>"></label>
+    <label class="field"><?= tx('Date') ?><input type="date" name="expense_date" required value="<?= e($value('expense_date', date('Y-m-d'))) ?>"></label>
+    <label class="field span-2"><?= tx('Note') ?><input name="note" maxlength="255" value="<?= e($value('note')) ?>"></label>
   </div>
   <div class="form-actions">
-    <button class="btn btn-primary" type="submit"><?= icon('check', 20) ?> Save expense</button>
-    <?php if ($editing): ?><a class="btn btn-ghost" href="<?= e(url('expenses.php')) ?>">Cancel</a><?php endif; ?>
+    <button class="btn btn-primary" type="submit"><?= icon('check', 20) ?> <?= tx('Save expense') ?></button>
+    <?php if ($editing): ?><a class="btn btn-ghost" href="<?= e(url('expenses.php')) ?>"><?= tx('Cancel') ?></a><?php endif; ?>
   </div>
 </form>
 <section class="card">
-  <h2>Recent expenses</h2>
+  <h2><?= tx('Recent expenses') ?></h2>
   <?php if (!$rows): ?>
-    <?= empty_state('wallet', 'No expenses yet', 'A rent payment or a bill will show in the monthly profit report.') ?>
+    <?= empty_state('wallet', t('No expenses yet'), t('A rent payment or a bill will show in the monthly profit report.')) ?>
   <?php else: ?>
     <div class="table-wrap">
       <table class="data stack">
-        <thead><tr><th>Title</th><th>Date</th><th class="num">Amount</th><th></th></tr></thead>
+        <thead><tr><th><?= tx('Title') ?></th><th><?= tx('Date') ?></th><th class="num"><?= tx('Amount') ?></th><th></th></tr></thead>
         <tbody>
           <?php foreach ($rows as $row): ?>
             <tr>
-              <td data-label="Title"><strong><?= e((string) $row['title']) ?></strong><?= $row['note'] ? '<br><small class="muted">' . e((string) $row['note']) . '</small>' : '' ?></td>
-              <td data-label="Date"><?= e(day_fmt((string) $row['expense_date'])) ?></td>
-              <td class="num" data-label="Amount"><?= e(money($row['amount'])) ?></td>
+              <td data-label="<?= tx('Title') ?>"><strong><?= e((string) $row['title']) ?></strong><?= $row['note'] ? '<br><small class="muted">' . e((string) $row['note']) . '</small>' : '' ?></td>
+              <td data-label="<?= tx('Date') ?>"><?= e(day_fmt((string) $row['expense_date'])) ?></td>
+              <td class="num" data-label="<?= tx('Amount') ?>"><?= e(money($row['amount'])) ?></td>
               <td class="actions" data-label="">
-                <a class="btn btn-ghost btn-sm" href="<?= e(url('expenses.php?edit=' . (int) $row['id'])) ?>"><?= icon('edit', 18) ?> Edit</a>
-                <form method="post" data-confirm="Remove this expense?">
+                <a class="btn btn-ghost btn-sm" href="<?= e(url('expenses.php?edit=' . (int) $row['id'])) ?>"><?= icon('edit', 18) ?> <?= tx('Edit') ?></a>
+                <form method="post" data-confirm="<?= tx('Remove this expense?') ?>">
                   <?= csrf_field() ?>
                   <input type="hidden" name="action" value="delete">
                   <input type="hidden" name="id" value="<?= (int) $row['id'] ?>">
-                  <button class="btn btn-danger btn-sm" type="submit"><?= icon('trash', 18) ?> Remove</button>
+                  <button class="btn btn-danger btn-sm" type="submit"><?= icon('trash', 18) ?> <?= tx('Remove') ?></button>
                 </form>
               </td>
             </tr>

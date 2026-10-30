@@ -8,16 +8,16 @@ function html_head(string $title, string $bodyClass = ''): void
         $currency = currency_symbol();
     }
     echo '<!doctype html>';
-    echo '<html lang="en">';
+    echo '<html lang="' . e(current_lang()) . '">';
     echo '<head>';
     echo '<meta charset="utf-8">';
     echo '<meta name="viewport" content="width=device-width, initial-scale=1">';
     echo '<meta name="theme-color" content="#102033">';
-    echo '<title>' . e($title) . ' · BasicPOS</title>';
+    echo '<title>' . e(t($title)) . ' · BasicPOS</title>';
     echo '<link rel="icon" href="' . e(asset('assets/favicon.svg')) . '" type="image/svg+xml">';
     echo '<link rel="stylesheet" href="' . e(asset('assets/css/app.css')) . '">';
     echo '</head>';
-    echo '<body class="' . e($bodyClass) . '" data-base="' . e(web_base()) . '" data-currency="' . e($currency) . '"' . (($bodyClass !== '' && str_contains($bodyClass, 'print-now')) ? ' data-print="1"' : '') . '>';
+    echo '<body class="' . e($bodyClass) . '" data-base="' . e(web_base()) . '" data-currency="' . e($currency) . '" data-msg-exact="' . e(t('Exact amount')) . '" data-msg-number="' . e(t('Enter a number')) . '" data-msg-short="' . e(t('Short')) . '" data-msg-change="' . e(t('Change')) . '"' . (($bodyClass !== '' && str_contains($bodyClass, 'print-now')) ? ' data-print="1"' : '') . '>';
 }
 
 function html_foot(bool $withScript = true): void
@@ -35,7 +35,7 @@ function render_flash(): void
         return;
     }
     $type = ($flash['type'] ?? '') === 'error' ? 'error' : 'success';
-    echo '<div class="flash flash-' . $type . '" role="status">' . e((string) ($flash['message'] ?? '')) . '</div>';
+    echo '<div class="flash flash-' . $type . '" role="status">' . e(t((string) ($flash['message'] ?? ''))) . '</div>';
 }
 
 function weak_password_note(): void
@@ -48,9 +48,9 @@ function weak_password_note(): void
         return;
     }
     if ($user['role'] === 'admin') {
-        $text = 'You are still using a starting password. Change it in Settings.';
+        $text = t('You are still using a starting password. Change it in Settings.');
     } else {
-        $text = 'This cashier login is still using a starting password. Ask the admin to change it.';
+        $text = t('This cashier login is still using a starting password. Ask the admin to change it.');
     }
     echo '<div class="flash flash-error no-print">' . e($text) . '</div>';
 }
@@ -58,14 +58,14 @@ function weak_password_note(): void
 function nav_items(): array
 {
     return [
-        ['dashboard.php', 'dashboard', 'Dashboard', 'grid'],
-        ['products.php', 'products', 'Products', 'box'],
-        ['pos.php', 'pos', 'Sale', 'cart'],
-        ['inventory.php', 'inventory', 'Stock in', 'inbox'],
-        ['expenses.php', 'expenses', 'Expenses', 'wallet'],
-        ['hr.php', 'hr', 'HR', 'users'],
-        ['discounts.php', 'discounts', 'Discounts', 'percent'],
-        ['reports.php', 'reports', 'Reports', 'chart'],
+        ['dashboard.php', 'dashboard', t('Dashboard'), 'grid'],
+        ['products.php', 'products', t('Products'), 'box'],
+        ['pos.php', 'pos', t('Sale'), 'cart'],
+        ['inventory.php', 'inventory', t('Stock in'), 'inbox'],
+        ['expenses.php', 'expenses', t('Expenses'), 'wallet'],
+        ['hr.php', 'hr', t('HR'), 'users'],
+        ['discounts.php', 'discounts', t('Discounts'), 'percent'],
+        ['reports.php', 'reports', t('Reports'), 'chart'],
     ];
 }
 
@@ -76,18 +76,18 @@ function layout_start(string $title, string $active = ''): void
     $pos = $active === 'pos';
     $class = 'role-' . $role . ($pos ? ' layout-pos' : '');
     html_head($title, $class);
-    echo '<a class="skip" href="#content">Skip to content</a>';
+    echo '<a class="skip" href="#content">' . e(t('Skip to content')) . '</a>';
     if ($role === 'cashier') {
         echo '<header class="cashier-bar">';
         echo '<a class="brand brand-compact" href="' . e(url('pos.php')) . '"><span class="brand-mark">BP</span><span><strong>BasicPOS</strong><small>by WebC</small></span></a>';
-        echo '<strong class="cashier-title">Sale</strong>';
+        echo '<strong class="cashier-title">' . e(t('Sale')) . '</strong>';
         echo '<div class="who">';
         echo '<span class="avatar">' . e(bp_upper(bp_substr((string) $user['full_name'], 0, 1))) . '</span>';
-        echo '<span class="who-name"><strong>' . e((string) $user['full_name']) . '</strong><small>Cashier</small></span>';
+        echo '<span class="who-name"><strong>' . e((string) $user['full_name']) . '</strong><small>' . e(t('Cashier')) . '</small></span>';
         echo '</div>';
         echo '<form method="post" action="' . e(url('logout.php')) . '">';
         echo csrf_field();
-        echo '<button class="btn btn-ghost btn-sm" type="submit">' . icon('logout', 20) . ' Log out</button>';
+        echo '<button class="btn btn-ghost btn-sm" type="submit">' . icon('logout', 20) . ' ' . e(t('Log out')) . '</button>';
         echo '</form>';
         echo '</header>';
     echo '<div class="content' . ($pos ? ' content-pos' : '') . '" id="content">';
@@ -112,21 +112,21 @@ function layout_start(string $title, string $active = ''): void
     echo '</nav>';
     echo '<div class="sidebar-foot">';
     $settingsActive = $active === 'settings';
-    echo '<a class="nav-link' . ($settingsActive ? ' active' : '') . '" href="' . e(url('settings.php')) . '">' . icon('gear', 26) . '<span class="label">Settings</span></a>';
+    echo '<a class="nav-link' . ($settingsActive ? ' active' : '') . '" href="' . e(url('settings.php')) . '">' . icon('gear', 26) . '<span class="label">' . e(t('Settings')) . '</span></a>';
     echo '<form method="post" action="' . e(url('logout.php')) . '">';
     echo csrf_field();
-    echo '<button class="nav-link" type="submit">' . icon('logout', 26) . '<span class="label">Log out</span></button>';
+    echo '<button class="nav-link" type="submit">' . icon('logout', 26) . '<span class="label">' . e(t('Log out')) . '</span></button>';
     echo '</form>';
     echo '</div>';
     echo '</aside>';
     echo '<div class="scrim" id="scrim"></div>';
     echo '<div class="main">';
     echo '<header class="topbar">';
-    echo '<button class="icon-btn menu-toggle" id="menuToggle" type="button" aria-label="Open menu">' . icon('menu', 26) . '</button>';
-    echo '<div class="topbar-title"><strong>' . e(setting('business_name', 'BasicPOS')) . '</strong><small>' . e($title) . '</small></div>';
+    echo '<button class="icon-btn menu-toggle" id="menuToggle" type="button" aria-label="' . e(t('Open menu')) . '">' . icon('menu', 26) . '</button>';
+    echo '<div class="topbar-title"><strong>' . e(setting('business_name', 'BasicPOS')) . '</strong><small>' . e(t($title)) . '</small></div>';
     echo '<div class="who">';
     echo '<span class="avatar">' . e(bp_upper(bp_substr((string) ($user['full_name'] ?? 'A'), 0, 1))) . '</span>';
-    echo '<span class="who-name"><strong>' . e((string) ($user['full_name'] ?? '')) . '</strong><small>Admin</small></span>';
+    echo '<span class="who-name"><strong>' . e((string) ($user['full_name'] ?? '')) . '</strong><small>' . e(t('Admin')) . '</small></span>';
     echo '</div>';
     echo '</header>';
     echo '<div class="content' . ($pos ? ' content-pos' : '') . '" id="content">';

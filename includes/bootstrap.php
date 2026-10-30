@@ -117,6 +117,8 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
 }
 
+require_once __DIR__ . '/i18n.php';
+
 function csrf_token(): string
 {
     if (empty($_SESSION['csrf']) || !is_string($_SESSION['csrf'])) {
@@ -137,7 +139,7 @@ function verify_csrf(): void
     $ok = is_string($sent) && is_string($known) && $known !== '' && hash_equals($known, $sent);
     if (!$ok) {
         http_response_code(419);
-        exit('Your session expired. Go back, refresh the page, and try again.');
+        exit(t('Your session expired. Go back, refresh the page, and try again.'));
     }
 }
 
@@ -243,7 +245,7 @@ set_exception_handler(static function (Throwable $e): void {
         echo '<p style="font-family:sans-serif;padding:24px">' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8') . '</p>';
         return;
     }
-    echo '<!doctype html><meta charset="utf-8"><title>BasicPOS</title><p style="font-family:sans-serif;padding:24px">Something went wrong. Please go back and try again.</p>';
+    echo '<!doctype html><meta charset="utf-8"><title>BasicPOS</title><p style="font-family:sans-serif;padding:24px">' . e(t('Something went wrong. Please go back and try again.')) . '</p>';
 });
 
 if (!app_installed() && !is_install_request()) {
@@ -256,7 +258,7 @@ if (!is_install_request() && app_installed()) {
     } catch (Throwable $e) {
         error_log('BasicPOS database connection failed: ' . $e->getMessage());
         http_response_code(500);
-        echo '<!doctype html><meta charset="utf-8"><title>BasicPOS</title><p style="font-family:sans-serif;padding:24px">BasicPOS cannot reach the database. Check the database name, user, and password in config.php, then reload this page.</p>';
+        echo '<!doctype html><meta charset="utf-8"><title>BasicPOS</title><p style="font-family:sans-serif;padding:24px">' . e(t('BasicPOS cannot reach the database. Check the database name, user, and password in config.php, then reload this page.')) . '</p>';
         exit;
     }
     $tz = 'Asia/Karachi';

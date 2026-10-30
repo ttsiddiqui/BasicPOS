@@ -16,7 +16,7 @@
   --shadow: 0 12px 30px rgba(16, 32, 51, 0.06);
   --radius: 18px;
   --top: 72px;
-  --font: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  --font: "Segoe UI", "Noto Sans", "Helvetica Neue", Arial, sans-serif;
 }
 
 * { box-sizing: border-box; }
