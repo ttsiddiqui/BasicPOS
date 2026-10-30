@@ -1,0 +1,15 @@
+Options -Indexes
+DirectoryIndex index.php
+
+<IfModule mod_authz_core.c>
+  <FilesMatch "^(config\.php|config\.sample\.php|install\.lock)$">
+    Require all denied
+  </FilesMatch>
+</IfModule>
+
+<IfModule !mod_authz_core.c>
+  <FilesMatch "^(config\.php|config\.sample\.php|install\.lock)$">
+    Order allow,deny
+    Deny from all
+  </FilesMatch>
+</IfModule>
